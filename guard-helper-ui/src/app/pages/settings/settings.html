@@ -1,0 +1,902 @@
+<div class="p-6 space-y-6 bg-slate-50 text-slate-800 h-full font-['Inter']">
+
+  <!-- Page Header -->
+  <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs shrink-0">
+    <div>
+      <h1 class="text-xl font-bold text-slate-800 tracking-wide">System Settings</h1>
+      <p class="text-slate-500 text-xs mt-1">Configure branding variables, system notifications, support features, and static pages.</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex border-b border-slate-200 bg-white p-3 rounded-2xl border shadow-xs gap-2 shrink-0 overflow-x-auto">
+    <button type="button" (click)="activeSettingsTab.set('branding')"
+      class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
+      [class.bg-indigo-50]="activeSettingsTab() === 'branding'" [class.text-indigo-600]="activeSettingsTab() === 'branding'"
+      [class.bg-transparent]="activeSettingsTab() !== 'branding'" [class.text-slate-400]="activeSettingsTab() !== 'branding'">
+      <i class="fa-solid fa-palette"></i> Branding & General
+    </button>
+    <button type="button" (click)="activeSettingsTab.set('notifications')"
+      class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
+      [class.bg-indigo-50]="activeSettingsTab() === 'notifications'" [class.text-indigo-600]="activeSettingsTab() === 'notifications'"
+      [class.bg-transparent]="activeSettingsTab() !== 'notifications'" [class.text-slate-400]="activeSettingsTab() !== 'notifications'">
+      <i class="fa-solid fa-bell"></i> SMTP & Telegram
+    </button>
+    <button type="button" (click)="activeSettingsTab.set('support')"
+      class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
+      [class.bg-indigo-50]="activeSettingsTab() === 'support'" [class.text-indigo-600]="activeSettingsTab() === 'support'"
+      [class.bg-transparent]="activeSettingsTab() !== 'support'" [class.text-slate-400]="activeSettingsTab() !== 'support'">
+      <i class="fa-solid weights fa-comments"></i> Portal Support
+    </button>
+    <button type="button" (click)="activeSettingsTab.set('pages')"
+      class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
+      [class.bg-indigo-50]="activeSettingsTab() === 'pages'" [class.text-indigo-600]="activeSettingsTab() === 'pages'"
+      [class.bg-transparent]="activeSettingsTab() !== 'pages'" [class.text-slate-400]="activeSettingsTab() !== 'pages'">
+      <i class="fa-solid fa-file-lines"></i> Custom Pages
+    </button>
+    <button type="button" (click)="activeSettingsTab.set('playground')"
+      class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
+      [class.bg-indigo-50]="activeSettingsTab() === 'playground'" [class.text-indigo-600]="activeSettingsTab() === 'playground'"
+      [class.bg-transparent]="activeSettingsTab() !== 'playground'" [class.text-slate-400]="activeSettingsTab() !== 'playground'">
+      <i class="fa-solid fa-square-rss"></i> Webhook Playground
+    </button>
+  </div>
+
+  <!-- Settings Configuration Form (Spans active settings tabs) -->
+  <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- 1. BRANDING & GENERAL TAB -->
+    @if (activeSettingsTab() === 'branding') {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+      
+      <!-- Logo & Accent Colors Panel -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between h-full">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> Theme & Identity
+          </h2>
+          
+          <div class="space-y-5">
+            <!-- Logo Upload -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">SYSTEM BRAND LOGO</label>
+              <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div class="w-14 h-14 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                  @if (settingsForm.get('system_logo')?.value) {
+                    <img [src]="themeService.getLogoUrl()" class="w-full h-full object-contain" alt="Branding Logo" />
+                  } @else {
+                    <i class="fa-solid fa-image text-slate-350 text-xl"></i>
+                  }
+                </div>
+                <div class="space-y-1.5">
+                  <input type="file" (change)="onLogoSelected($event)" class="hidden" accept="image/*" #logoInput />
+                  <button type="button" (click)="logoInput.click()" [disabled]="isUploadingLogo()"
+                    class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-lg text-[10px] tracking-wide transition cursor-pointer flex items-center gap-1 shadow-xs disabled:opacity-50">
+                    <i class="fa-solid fa-cloud-arrow-up" *ngIf="!isUploadingLogo()"></i>
+                    <i class="fa-solid fa-spinner animate-spin" *ngIf="isUploadingLogo()"></i>
+                    <span>Upload Logo</span>
+                  </button>
+                  <p class="text-[8px] text-slate-450">PNG, JPG, SVG, or GIF. Max 2MB.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Logo Toggle -->
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div class="space-y-0.5">
+                <span class="block text-xs font-semibold text-slate-700">Show Brand Logo</span>
+                <span class="block text-[9px] text-slate-450">Display the logo image instead of system name text.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" formControlName="logo_enabled" class="sr-only peer" />
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-650"></div>
+              </label>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">PRIMARY COLOR</label>
+                <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+                  <input type="color" formControlName="theme_primary_color" class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
+                  <span class="text-xs font-mono font-bold text-slate-700">{{ settingsForm.get('theme_primary_color')?.value }}</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">ACCENT COLOR</label>
+                <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+                  <input type="color" formControlName="theme_accent_color" class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
+                  <span class="text-xs font-mono font-bold text-slate-700">{{ settingsForm.get('theme_accent_color')?.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Font Selection -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">BRAND NAME FONT FAMILY</label>
+              <select formControlName="theme_font_family" 
+                class="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition">
+                <option value="Pacifico">Pacifico (Default / Script)</option>
+                <option value="Inter">Inter (Clean / Sans-serif)</option>
+                <option value="Outfit">Outfit (Elegant / Sans-serif)</option>
+                <option value="Poppins">Poppins (Modern / Sans-serif)</option>
+                <option value="Montserrat">Montserrat (Geometric / Sans-serif)</option>
+                <option value="Playfair Display">Playfair Display (Classy Serif)</option>
+                <option value="Bebas Neue">Bebas Neue (Bold Display)</option>
+                <option value="Cinzel">Cinzel (Classical Serif)</option>
+              </select>
+              <p class="text-[9px] text-slate-450 mt-1">Changes the typography typeface style of the brand text name across layouts.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 border-t border-slate-100 pt-4 flex justify-between items-center">
+          <span class="text-[9px] text-slate-450">Need a fresh design reset?</span>
+          <button type="button" (click)="restoreDefaultTheme()"
+            class="px-2.5 py-1 text-[9px] font-bold text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 border border-slate-200 rounded transition cursor-pointer">
+            <i class="fa-solid fa-undo me-0.5"></i> Reset Colors
+          </button>
+        </div>
+      </div>
+
+      <!-- General & Access settings panel -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-5 h-full">
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i class="fa-solid fa-sliders text-indigo-600"></i> General & Access Variables
+        </h2>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">SYSTEM / BRAND NAME</label>
+          <input type="text" formControlName="system_name" placeholder="e.g. Raven Guard"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Changes the title displayed in the Admin Dashboard sidebar and Public Portal header.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PORTAL SLOGAN TITLE</label>
+            <input type="text" formControlName="system_slogan_title" placeholder="e.g. Access Portal"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition" />
+            <p class="text-[9px] text-slate-450 mt-1">Main heading title displayed inside the Public Portal verification card.</p>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PORTAL SLOGAN SUBTITLE</label>
+            <input type="text" formControlName="system_slogan_subtitle" placeholder="e.g. Retrieve your 2FA codes easily."
+              class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+            <p class="text-[9px] text-slate-450 mt-1">Short subtitle slogan shown directly below the portal main heading.</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PUBLIC PORTAL COPYRIGHT TEXT</label>
+          <input type="text" formControlName="copyright_text" placeholder="e.g. &copy; 2026 Raven Guard. All rights reserved. (Leave empty for dynamic default)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Customizes the copyright disclaimer at the bottom of the Public Access portal page. Supports HTML entities (like &amp;copy;).</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">FRONTEND BASE URL</label>
+            <input type="text" formControlName="frontend_url" placeholder="http://localhost:4200"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+            <p class="text-[9px] text-slate-450 mt-1">Used to generate complete token-based access links in Telegram and API responses.</p>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">API SIGNATURE / SECRET KEY</label>
+            <div class="relative flex items-center">
+              <input type="text" formControlName="webhook_secret_key" placeholder="Generate secret key"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 pr-10 transition" />
+              <button type="button" (click)="regenerateWebhookSecret()"
+                class="absolute right-3.5 text-slate-400 hover:text-indigo-600 transition cursor-pointer">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <p class="text-[9px] text-slate-450 mt-1">Key for N8N dispatches. Pass as HMAC signature or static token header.</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">E-MAIL TIMEFRAME LIMIT (SECONDS)</label>
+          <input type="number" formControlName="email_timeframe_limit" placeholder="e.g. 1200"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Defines the maximum age (in seconds) allowed for intercepted guard code emails. Emails older than this will be rejected as outdated. Default: 1200 seconds (20 minutes).</p>
+        </div>
+
+        <div class="border-t border-slate-100 pt-5 flex items-center justify-between">
+          <div class="space-y-0.5">
+            <span class="block text-xs font-semibold text-slate-700">Open Public Access Portal</span>
+            <span class="block text-[9px] text-slate-450">Allow tokenless guard fetching via registered email search.</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer select-none">
+            <input type="checkbox" formControlName="public_access_portal_enabled" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+            </div>
+          </label>
+        </div>
+
+        <div class="border-t border-slate-100 pt-5 flex items-center justify-between">
+          <div class="space-y-0.5">
+            <span class="block text-xs font-semibold text-slate-700">Hide Access Restricted Warning</span>
+            <span class="block text-[9px] text-slate-450">Hide warning message and lock icon on public portal when access is restricted.</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer select-none">
+            <input type="checkbox" formControlName="hide_access_restricted_info" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- 2. NOTIFICATIONS TAB -->
+    @if (activeSettingsTab() === 'notifications') {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
+      <!-- SMTP Mail Module -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+            <h2 class="text-sm font-bold flex items-center gap-2 text-indigo-600">
+              <i class="fa-solid fa-envelope"></i> SMTP Mail Module
+            </h2>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" formControlName="smtp_enabled" class="sr-only peer" />
+              <div
+                class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+              </div>
+            </label>
+          </div>
+
+          <div class="space-y-4" [class.opacity-50]="!settingsForm.get('smtp_enabled')?.value">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2">
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SMTP HOST</label>
+                <input type="text" formControlName="smtp_host" placeholder="smtp.mailtrap.io"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">PORT</label>
+                <input type="number" formControlName="smtp_port" placeholder="587"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">USERNAME</label>
+                <input type="text" formControlName="smtp_username" placeholder="user@domain.com"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">PASSWORD</label>
+                <input type="password" formControlName="smtp_password" placeholder="••••••••"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">ENCRYPTION</label>
+                <select formControlName="smtp_encryption"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600 cursor-pointer">
+                  <option value="ssl">SSL / TLS</option>
+                  <option value="tls">STARTTLS</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">RECIPIENT (TO) EMAIL</label>
+                <input type="email" formControlName="smtp_to_address" placeholder="recipient@domain.com"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">FROM ADDRESS</label>
+                <input type="email" formControlName="smtp_from_address" placeholder="sender@domain.com"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">FROM NAME</label>
+                <input type="text" formControlName="smtp_from_name" placeholder="Raven System"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 flex justify-between items-center"
+          [class.opacity-50]="!settingsForm.get('smtp_enabled')?.value">
+          <span class="text-[9px] text-slate-500 leading-tight">
+            <i class="fa-solid fa-circle-info text-indigo-500 mr-0.5"></i> Save first before running tests.
+          </span>
+          <button type="button" (click)="onClickTestSmtp()"
+            [disabled]="isTestingSmtp() || !settingsForm.get('smtp_enabled')?.value"
+            class="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 bg-white border border-slate-300 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50">
+            <i class="fa-solid"
+              [ngClass]="isTestingSmtp() ? 'fa-spinner animate-spin text-indigo-650' : 'fa-paper-plane text-slate-500'"></i>
+            <span>Test Smtp</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Telegram Bot Module -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+            <h2 class="text-sm font-bold flex items-center gap-2 text-sky-650">
+              <i class="fa-solid fa-paper-plane"></i> Telegram Channel Module
+            </h2>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" formControlName="telegram_enabled" class="sr-only peer" />
+              <div
+                class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600">
+              </div>
+            </label>
+          </div>
+
+          <div class="space-y-4" [class.opacity-50]="!settingsForm.get('telegram_enabled')?.value">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">TELEGRAM BOT TOKEN</label>
+              <input type="text" formControlName="telegram_bot_token"
+                placeholder="0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-sky-600" />
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">TELEGRAM CHAT ID</label>
+              <input type="text" formControlName="telegram_chat_id" placeholder="-1000000000000"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-sky-600" />
+            </div>
+
+            <!-- Webhook Toggle Control -->
+            <div class="border-t border-slate-100 pt-3.5" [class.opacity-50]="isTogglingWebhook()">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-0.5">TELEGRAM WEBHOOK</label>
+                  <p class="text-[9px] text-slate-450 leading-tight">Sync and manage commands automatically.</p>
+                </div>
+                <div class="flex items-center">
+                  @if (isLocalhost()) {
+                    <span class="text-[9px] bg-red-50 text-red-600 border border-red-100 rounded px-1.5 py-0.5 font-semibold me-2">Localhost Blocked</span>
+                  }
+                  <label class="relative inline-flex items-center cursor-pointer select-none">
+                    <input type="checkbox" formControlName="telegram_webhook_active" 
+                           (change)="onToggleTelegramWebhook($event)"
+                           [disabled]="isLocalhost() || isTogglingWebhook() || !settingsForm.get('telegram_enabled')?.value"
+                           class="sr-only peer" />
+                    <div
+                      class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600">
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-4 text-[10px] text-slate-650 flex flex-col gap-1.5">
+          <div class="leading-relaxed">
+            <i class="fa-solid fa-info-circle text-sky-600 me-1"></i> Start (`/start`) the bot before using commands.
+          </div>
+          <div class="border-t border-slate-200 pt-1.5 flex justify-between items-center">
+            <span class="text-[9px] text-slate-450">Bot documentation</span>
+            <a href="/telegram-docs.html" target="_blank" class="text-sky-600 hover:text-sky-700 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-book"></i> Read Docs
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- 3. PORTAL SUPPORT TAB -->
+    @if (activeSettingsTab() === 'support') {
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs animate-fadeIn space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-sm font-bold flex items-center gap-2 text-indigo-600">
+          <i class="fa-solid fa-comments"></i> Portal Support Widget
+        </h2>
+        <label class="relative inline-flex items-center cursor-pointer select-none">
+          <input type="checkbox" formControlName="support_portal_enabled" class="sr-only peer" />
+          <div
+            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+          </div>
+        </label>
+      </div>
+
+      <div class="space-y-4" [class.opacity-50]="!settingsForm.get('support_portal_enabled')?.value">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">SUPPORT WIDGET MODE</label>
+            <select formControlName="support_mode"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600 cursor-pointer">
+              <option value="built_in">Built-in Live Chat</option>
+              <option value="custom_script">Custom Embedded Script</option>
+            </select>
+          </div>
+
+          @if (settingsForm.get('support_mode')?.value === 'custom_script') {
+          <div class="md:col-span-2">
+            <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-1.5">CUSTOM EMBED SCRIPT CODE</label>
+            <textarea formControlName="support_custom_script"
+              placeholder="<!-- Paste your live chat script here, e.g. Crisp, Tawk.to, etc. -->"
+              class="w-full h-28 bg-white border border-slate-300 rounded-lg px-3 py-1.5 font-mono text-xs text-slate-808 outline-none focus:border-indigo-600 resize-none"></textarea>
+            <p class="text-[9px] text-slate-500 mt-1">This HTML/JS block will inject dynamically on the guest portal.</p>
+          </div>
+          } @else {
+          <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-[10px] text-slate-650 leading-relaxed">
+            <p class="font-bold text-indigo-700 mb-1 flex items-center gap-1 text-xs">
+              <i class="fa-solid fa-circle-info"></i> Built-in Live Chat Features
+            </p>
+            <ul class="list-disc pl-4 space-y-1.5 mt-1 font-medium">
+              <li>Users can message support directly from their public grab code page.</li>
+              <li>Chats are synced instantly and reply interface is active in the **Support Chats** sidebar page.</li>
+              <li>Alerts trigger in Telegram ONLY on the first message sent by a guest.</li>
+            </ul>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- SUBMIT ACTIONS BAR FOR FORM TABS -->
+    @if (activeSettingsTab() === 'branding' || activeSettingsTab() === 'notifications' || activeSettingsTab() === 'support') {
+    <div class="flex justify-end pt-4 animate-fadeIn">
+      <button type="submit" [disabled]="isSaving() || settingsForm.invalid"
+        class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-sm border border-indigo-750">
+        <i class="fa-solid" [ngClass]="isSaving() ? 'fa-spinner animate-spin' : 'fa-save'"></i>
+        <span>{{ isSaving() ? 'Saving Configuration...' : 'Save Settings' }}</span>
+      </button>
+    </div>
+    }
+
+  </form>
+
+  <!-- 4. CUSTOM PAGES TAB (Independent CRUD) -->
+  @if (activeSettingsTab() === 'pages') {
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs animate-fadeIn space-y-6">
+    <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+      <div>
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Static Content Pages</h2>
+        <p class="text-[10px] text-slate-450 mt-1">Manage secondary static links (e.g. Terms, Privacy Policy) shown in the portal footer.</p>
+      </div>
+      <button type="button" (click)="openAddPageModal()"
+        class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-xs border border-indigo-750">
+        <i class="fa-solid fa-plus text-[10px]"></i>
+        <span>Add Page</span>
+      </button>
+    </div>
+
+    <!-- Pages List Table -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <th class="p-4">Title</th>
+            <th class="p-4">Slug</th>
+            <th class="p-4">Published</th>
+            <th class="p-4">Show in Footer</th>
+            <th class="p-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (page of staticPages(); track page.id) {
+          <tr class="hover:bg-slate-50/50 transition">
+            <td class="p-4 font-bold text-slate-700">{{ page.title }}</td>
+            <td class="p-4 font-mono text-[10px] text-indigo-600 bg-indigo-50/30 px-2 py-0.5 rounded border border-indigo-100/30 inline-block mt-3.5">{{ page.slug }}</td>
+            <td class="p-4">
+              @if (page.is_published) {
+                <span class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Published</span>
+              } @else {
+                <span class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-slate-100 text-slate-500 border border-slate-200">Draft</span>
+              }
+            </td>
+            <td class="p-4 text-slate-500">
+              <i class="fa-solid text-sm" [ngClass]="page.show_in_footer ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-300'"></i>
+            </td>
+            <td class="p-4 text-right">
+              <div class="flex justify-end gap-2">
+                <button type="button" (click)="openEditPageModal(page)"
+                  class="p-1 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                  Edit
+                </button>
+                <button type="button" (click)="deletePage(page.id)"
+                  class="p-1 px-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          @empty {
+          <tr>
+            <td colspan="5" class="py-12 text-center text-slate-400">
+              <i class="fa-regular fa-folder-open text-2xl mb-2 text-slate-300 block"></i>
+              <span>No custom static pages created yet.</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- 5. WEBHOOK INTEGRATION & PLAYGROUND TAB -->
+  @if (activeSettingsTab() === 'playground') {
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs animate-fadeIn space-y-5">
+    <div class="border-b border-slate-200 pb-3 mb-4 flex justify-between items-center">
+      <h2 class="text-sm font-bold flex items-center gap-2 text-emerald-600 uppercase tracking-wider">
+        <i class="fa-solid fa-square-rss"></i> Webhook Integration Playground
+      </h2>
+      <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-100">
+        Sandbox Environment
+      </span>
+    </div>
+
+    <p class="text-slate-500 text-xs mb-5">
+      Use this playground to test generating invitation links automatically via external workflows (like N8N or custom APIs).
+    </p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Configuration Controls -->
+      <div class="space-y-4">
+        <h3 class="text-xs font-bold text-slate-705 uppercase tracking-wider">1. Sandbox Payload</h3>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">API ENDPOINT</label>
+          <select [value]="playgroundEndpointMode()" (change)="onPlaygroundEndpointModeInput($event)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
+            <option value="single">Single Token Link (generate-access)</option>
+            <option value="bulk">Bulk Account Bundle Links (generate-access-bulk)</option>
+          </select>
+        </div>
+
+        @if (playgroundEndpointMode() === 'single') {
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">TARGET EMAIL</label>
+            <input type="email" [value]="playgroundEmail()" (input)="onPlaygroundEmailInput($event)"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT PLATFORM</label>
+            <select [value]="playgroundPlatform()" (change)="onPlaygroundPlatformInput($event)"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
+              @for (p of platforms(); track p.id) {
+              <option [value]="p.name">{{ p.name }}</option>
+              }
+              @empty {
+              <option value="Steam">Steam</option>
+              }
+            </select>
+          </div>
+        } @else {
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT ACCOUNT BUNDLE</label>
+            <select [value]="playgroundBundleId()" (change)="onPlaygroundBundleInput($event)"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
+              @for (b of accountBundles(); track b.id) {
+              <option [value]="b.id">{{ b.name }} (ID: {{ b.id }})</option>
+              }
+              @empty {
+              <option value="1">No bundles available</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">QUANTITY TO GENERATE</label>
+            <input type="number" [value]="playgroundQuantity()" (input)="onPlaygroundQuantityInput($event)" min="1" max="1000"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+          </div>
+        }
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">USAGE LIMIT (USES)</label>
+          <input type="number" [value]="playgroundLimit()" (input)="onPlaygroundLimitInput($event)" min="1"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">BATCH TAG (OPTIONAL)</label>
+          <input type="text" [value]="playgroundTag()" (input)="onPlaygroundTagInput($event)" placeholder="e.g. Summer-Promo"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">AUTHENTICATION METHOD</label>
+          <div class="flex gap-2">
+            <button type="button" (click)="setPlaygroundAuthType('secret')"
+              class="flex-1 px-3 py-1.5 text-[10px] font-semibold border rounded-lg transition cursor-pointer text-center"
+              [class.bg-emerald-650]="playgroundAuthType() === 'secret'"
+              [class.text-white]="playgroundAuthType() === 'secret'"
+              [class.border-emerald-650]="playgroundAuthType() === 'secret'"
+              [class.bg-white]="playgroundAuthType() !== 'secret'"
+              [class.text-slate-700]="playgroundAuthType() !== 'secret'"
+              [class.border-slate-300]="playgroundAuthType() !== 'secret'">
+              Static Secret
+            </button>
+            <button type="button" (click)="setPlaygroundAuthType('signature')"
+              class="flex-1 px-3 py-1.5 text-[10px] font-semibold border rounded-lg transition cursor-pointer text-center"
+              [class.bg-emerald-650]="playgroundAuthType() === 'signature'"
+              [class.text-white]="playgroundAuthType() === 'signature'"
+              [class.border-emerald-650]="playgroundAuthType() === 'signature'"
+              [class.bg-white]="playgroundAuthType() !== 'signature'"
+              [class.text-slate-700]="playgroundAuthType() !== 'signature'"
+              [class.border-slate-300]="playgroundAuthType() !== 'signature'">
+              HMAC Signature
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Request / Workflow Node tabs -->
+      <div class="space-y-4 lg:col-span-2 flex flex-col justify-between">
+        <div>
+          <!-- Tab Navigation -->
+          <div class="flex border-b border-slate-200 mb-3.5 gap-2">
+            <button type="button" (click)="activeTab.set('curl')"
+              class="pb-2 text-[11px] font-bold border-b-2 transition-all cursor-pointer outline-none bg-transparent"
+              [class.border-emerald-600]="activeTab() === 'curl'" [class.text-emerald-700]="activeTab() === 'curl'"
+              [class.border-transparent]="activeTab() !== 'curl'" [class.text-slate-400]="activeTab() !== 'curl'">
+              cURL Request
+            </button>
+            <button type="button" (click)="activeTab.set('n8n')"
+              class="pb-2 text-[11px] font-bold border-b-2 transition-all cursor-pointer outline-none bg-transparent"
+              [class.border-emerald-600]="activeTab() === 'n8n'" [class.text-emerald-700]="activeTab() === 'n8n'"
+              [class.border-transparent]="activeTab() !== 'n8n'" [class.text-slate-400]="activeTab() !== 'n8n'">
+              N8N Workflow Node
+            </button>
+            <button type="button" (click)="activeTab.set('code')"
+              class="pb-2 text-[11px] font-bold border-b-2 transition-all cursor-pointer outline-none bg-transparent"
+              [class.border-emerald-600]="activeTab() === 'code'" [class.text-emerald-700]="activeTab() === 'code'"
+              [class.border-transparent]="activeTab() !== 'code'" [class.text-slate-400]="activeTab() !== 'code'">
+              Code Integration
+            </button>
+            <button type="button" (click)="activeTab.set('response')"
+              class="pb-2 text-[11px] font-bold border-b-2 transition-all cursor-pointer outline-none bg-transparent"
+              [class.border-emerald-600]="activeTab() === 'response'"
+              [class.text-emerald-700]="activeTab() === 'response'"
+              [class.border-transparent]="activeTab() !== 'response'"
+              [class.text-slate-400]="activeTab() !== 'response'">
+              API Response Schema
+            </button>
+          </div>
+
+          <!-- cURL tab -->
+          @if (activeTab() === 'curl') {
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-[10px] text-slate-505">
+              <span>Execute this command in your terminal to dispatch manually.</span>
+              <button type="button" (click)="copyCurlToClipboard()"
+                class="font-semibold text-emerald-600 hover:text-emerald-700 transition cursor-pointer flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> Copy cURL
+              </button>
+            </div>
+            <div
+              class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap select-all shadow-inner border border-slate-800 h-36 scrollbar-thin">
+              {{ playgroundCurl() }}
+            </div>
+          </div>
+          }
+
+          <!-- N8N Node tab -->
+          @if (activeTab() === 'n8n') {
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-[10px] text-slate-505">
+              <div class="flex items-center gap-1.5 cursor-pointer select-none"
+                (click)="toggleDockerHost(!useDockerHost())">
+                <input type="checkbox" [checked]="useDockerHost()"
+                  class="w-3.5 h-3.5 bg-white border-slate-300 text-emerald-600 focus:ring-emerald-500 rounded cursor-pointer" />
+                <span class="text-slate-650">Use local Docker host (<code
+                    class="font-mono bg-slate-200 px-0.5 rounded text-slate-705">host.docker.internal</code>)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="downloadN8nJson()"
+                  class="font-semibold text-emerald-600 hover:text-emerald-700 transition cursor-pointer flex items-center gap-1">
+                  <i class="fa-solid fa-download"></i> Download JSON
+                </button>
+                <span class="text-slate-300">|</span>
+                <button type="button" (click)="copyN8nToClipboard()"
+                  class="font-semibold text-emerald-600 hover:text-emerald-700 transition cursor-pointer flex items-center gap-1">
+                  <i class="fa-solid fa-copy"></i> Copy N8N JSON
+                </button>
+              </div>
+            </div>
+            <div
+              class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap select-all shadow-inner border border-slate-800 h-36 scrollbar-thin">
+              {{ playgroundN8n() }}
+            </div>
+          </div>
+          }
+
+          <!-- Code Integration tab -->
+          @if (activeTab() === 'code') {
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-[10px] text-slate-500">
+              <div class="flex border-b border-slate-200 gap-1 pb-1">
+                <button type="button" (click)="activeCodeLanguage.set('php')"
+                  class="px-2 py-0.5 text-[10px] font-semibold transition-all cursor-pointer outline-none rounded bg-transparent"
+                  [class.bg-emerald-50]="activeCodeLanguage() === 'php'"
+                  [class.text-emerald-700]="activeCodeLanguage() === 'php'"
+                  [class.text-slate-500]="activeCodeLanguage() !== 'php'">
+                  PHP (cURL)
+                </button>
+                <button type="button" (click)="activeCodeLanguage.set('csharp')"
+                  class="px-2 py-0.5 text-[10px] font-semibold transition-all cursor-pointer outline-none rounded bg-transparent"
+                  [class.bg-emerald-50]="activeCodeLanguage() === 'csharp'"
+                  [class.text-emerald-700]="activeCodeLanguage() === 'csharp'"
+                  [class.text-slate-500]="activeCodeLanguage() !== 'csharp'">
+                  C# (HttpClient)
+                </button>
+                <button type="button" (click)="activeCodeLanguage.set('python')"
+                  class="px-2 py-0.5 text-[10px] font-semibold transition-all cursor-pointer outline-none rounded bg-transparent"
+                  [class.bg-emerald-50]="activeCodeLanguage() === 'python'"
+                  [class.text-emerald-700]="activeCodeLanguage() === 'python'"
+                  [class.text-slate-500]="activeCodeLanguage() !== 'python'">
+                  Python (Requests)
+                </button>
+                <button type="button" (click)="activeCodeLanguage.set('js')"
+                  class="px-2 py-0.5 text-[10px] font-semibold transition-all cursor-pointer outline-none rounded bg-transparent"
+                  [class.bg-emerald-50]="activeCodeLanguage() === 'js'"
+                  [class.text-emerald-700]="activeCodeLanguage() === 'js'"
+                  [class.text-slate-500]="activeCodeLanguage() !== 'js'">
+                  JS (Fetch)
+                </button>
+              </div>
+              <button type="button" (click)="copyCodeToClipboard()"
+                class="font-semibold text-emerald-600 hover:text-emerald-700 transition cursor-pointer flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> Copy Snippet
+              </button>
+            </div>
+            <div
+              class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap select-all shadow-inner border border-slate-800 h-36 scrollbar-thin">
+              @if (activeCodeLanguage() === 'php') {
+              {{ playgroundPhpCode() }}
+              } @else if (activeCodeLanguage() === 'csharp') {
+              {{ playgroundCsharpCode() }}
+              } @else if (activeCodeLanguage() === 'python') {
+              {{ playgroundPythonCode() }}
+              } @else if (activeCodeLanguage() === 'js') {
+              {{ playgroundJsCode() }}
+              }
+            </div>
+          </div>
+          }
+
+          <!-- API Response schema tab -->
+          @if (activeTab() === 'response') {
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-[10px] text-slate-550">
+              <span>Successful API Response structure returned:</span>
+            </div>
+            <div
+              class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap shadow-inner border border-slate-800 h-36 scrollbar-thin">
+              {{ playgroundResponseSchema() }}
+            </div>
+          </div>
+          }
+        </div>
+
+        <div class="flex justify-between items-center pt-4 border-t border-slate-150 mt-4">
+          <span class="text-[9px] text-slate-450">
+            <i class="fa-solid fa-circle-info text-emerald-500 mr-0.5"></i> Call local webhook API instantly.
+          </span>
+          <button type="button" (click)="sendPlaygroundRequest()" [disabled]="playgroundIsTesting()"
+            class="bg-emerald-605 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs border border-emerald-750 disabled:opacity-50">
+            <i class="fa-solid" [ngClass]="playgroundIsTesting() ? 'fa-spinner animate-spin' : 'fa-paper-plane'"></i>
+            <span>{{ playgroundIsTesting() ? 'Sending Test...' : 'Send Test Request' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Response output view -->
+      @if (playgroundResponseStatus() !== null) {
+      <div class="lg:col-span-3 pt-5 space-y-3">
+        <h3 class="text-xs font-bold text-slate-705 uppercase tracking-wider flex items-center gap-2">
+          <span>3. Response Result</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold border"
+            [class.bg-green-50]="playgroundResponseStatus()! < 400"
+            [class.text-green-700]="playgroundResponseStatus()! < 400"
+            [class.border-green-200]="playgroundResponseStatus()! < 400"
+            [class.bg-red-50]="playgroundResponseStatus()! >= 400"
+            [class.text-red-700]="playgroundResponseStatus()! >= 400"
+            [class.border-red-200]="playgroundResponseStatus()! >= 400">
+            STATUS: {{ playgroundResponseStatus() }}
+          </span>
+        </h3>
+        <div
+          class="bg-slate-50 border border-slate-200 p-4 rounded-xl font-mono text-[11px] max-h-60 overflow-y-auto scrollbar-thin">
+          <pre class="text-slate-800">{{ playgroundResponse() | json }}</pre>
+        </div>
+      </div>
+      }
+
+    </div>
+  </div>
+  }
+
+  <!-- CUSTOM STATIC PAGE EDITOR MODAL DIALOG -->
+  @if (isPageModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="w-full max-w-xl bg-white border border-slate-250 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-zoomIn">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center shrink-0">
+        <h3 class="text-sm font-bold text-slate-850">
+          {{ editingPageId() !== null ? 'Edit Custom Page' : 'Add Custom Page' }}
+        </h3>
+        <button type="button" (click)="isPageModalOpen.set(false)" class="text-slate-400 hover:text-slate-750 transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-4 max-h-[60vh] text-left">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PAGE TITLE</label>
+          <input type="text" [(ngModel)]="pageFormTitle" placeholder="e.g. Terms of Service"
+            class="w-full bg-white border border-slate-350 focus:border-indigo-600 rounded-lg px-3.5 py-2 text-xs text-slate-808 outline-none transition" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">SLUG (OPTIONAL)</label>
+          <input type="text" [(ngModel)]="pageFormSlug" placeholder="e.g. terms-of-service"
+            class="w-full bg-white border border-slate-350 focus:border-indigo-600 rounded-lg px-3.5 py-2 text-xs text-slate-808 outline-none transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Leave empty to auto-generate from Title. Must be lowercase letters, numbers, and dashes.</p>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">HTML / TEXT CONTENT</label>
+          <textarea [(ngModel)]="pageFormContent" placeholder="Enter page content details. HTML tags are supported..." rows="8"
+            class="w-full bg-white border border-slate-350 focus:border-indigo-600 rounded-lg px-3.5 py-2 font-mono text-xs text-slate-808 outline-none resize-none transition"></textarea>
+        </div>
+
+        <!-- Toggles -->
+        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-700">Published Status</span>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" [(ngModel)]="pageFormPublished" class="sr-only peer" />
+              <div
+                class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600">
+              </div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-700">Display in Footer</span>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" [(ngModel)]="pageFormShowInFooter" class="sr-only peer" />
+              <div
+                class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600">
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-4 border-t border-slate-150 bg-slate-50/50 flex justify-end gap-3 shrink-0">
+        <button type="button" (click)="isPageModalOpen.set(false)"
+          class="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-755 font-bold rounded-xl text-xs tracking-wider transition cursor-pointer">
+          Cancel
+        </button>
+        <button type="button" (click)="savePage()"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs tracking-wider transition cursor-pointer border border-indigo-750">
+          Save Page
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

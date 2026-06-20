@@ -1,0 +1,106 @@
+<div class="p-6 space-y-6 bg-slate-50 text-slate-800 h-full">
+
+  <!-- Page Header -->
+  <div class="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+    <div>
+      <h1 class="text-xl font-bold text-slate-805 tracking-wide">Account Settings</h1>
+      <p class="text-slate-500 text-xs mt-1">Configure your personal administrator profile, email address, and
+        authentication password.</p>
+    </div>
+  </div>
+
+  <form [formGroup]="accountForm" (ngSubmit)="onSubmit()"
+    class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+    <h2 class="text-base font-semibold flex items-center gap-2 text-indigo-650 border-b border-slate-100 pb-3 mb-2">
+      <i class="fa-solid fa-user-shield"></i> Account Details
+    </h2>
+
+    <div class="space-y-4">
+      <!-- Name -->
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">PROFILE NAME</label>
+        <input type="text" formControlName="name" placeholder="Administrator Name"
+          class="w-full bg-white border rounded-lg px-3 py-2 text-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+          [class.border-slate-300]="!accountForm.get('name')?.touched || accountForm.get('name')?.valid"
+          [class.border-red-500]="accountForm.get('name')?.touched && accountForm.get('name')?.invalid" />
+        <p *ngIf="accountForm.get('name')?.touched && accountForm.get('name')?.invalid"
+          class="text-[10px] text-red-500 mt-1">
+          Profile name is required (minimum 2 characters).
+        </p>
+      </div>
+
+      <!-- Email Address -->
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">EMAIL ADDRESS</label>
+        <input type="email" formControlName="email" placeholder="admin@domain.com"
+          class="w-full bg-white border rounded-lg px-3 py-2 text-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+          [class.border-slate-300]="!accountForm.get('email')?.touched || accountForm.get('email')?.valid"
+          [class.border-red-500]="accountForm.get('email')?.touched && accountForm.get('email')?.invalid" />
+        <p *ngIf="accountForm.get('email')?.touched && accountForm.get('email')?.invalid"
+          class="text-[10px] text-red-500 mt-1">
+          Please enter a valid email address.
+        </p>
+      </div>
+
+      <div class="border-t border-slate-100 my-5 pt-4">
+        <h3 class="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-key text-slate-400"></i> Change Password (Optional)
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- New Password -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">NEW PASSWORD</label>
+            <input type="password" formControlName="new_password" placeholder="Min 8 characters"
+              class="w-full bg-white border rounded-lg px-3 py-2 text-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              [class.border-slate-300]="!accountForm.get('new_password')?.touched || accountForm.get('new_password')?.valid"
+              [class.border-red-500]="accountForm.get('new_password')?.touched && accountForm.get('new_password')?.invalid" />
+            <p *ngIf="accountForm.get('new_password')?.touched && accountForm.get('new_password')?.invalid"
+              class="text-[10px] text-red-500 mt-1">
+              New password must be at least 8 characters.
+            </p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">CONFIRM NEW PASSWORD</label>
+            <input type="password" formControlName="new_password_confirmation" placeholder="Verify new password"
+              class="w-full bg-white border rounded-lg px-3 py-2 text-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              [class.border-slate-300]="!accountForm.get('new_password_confirmation')?.touched || !accountForm.hasError('mismatch')"
+              [class.border-red-500]="accountForm.get('new_password_confirmation')?.touched && accountForm.hasError('mismatch')" />
+            <p *ngIf="accountForm.get('new_password_confirmation')?.touched && accountForm.hasError('mismatch')"
+              class="text-[10px] text-red-500 mt-1">
+              New passwords do not match.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Password (ALWAYS REQUIRED FOR UPDATE) -->
+      <div class="border-t border-slate-100 my-5 pt-4 bg-amber-50/50 p-4 rounded-xl border border-amber-200">
+        <label class="block text-[10px] font-bold text-amber-850 tracking-wider mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-lock text-amber-600"></i> CURRENT PASSWORD (REQUIRED FOR SECURITY CONFIRMATION)
+        </label>
+        <input type="password" formControlName="current_password"
+          placeholder="Confirm your current password to save changes"
+          class="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-xs outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600"
+          [class.border-red-500]="accountForm.get('current_password')?.touched && accountForm.get('current_password')?.invalid" />
+        <p *ngIf="accountForm.get('current_password')?.touched && accountForm.get('current_password')?.invalid"
+          class="text-[10px] text-red-650 mt-1">
+          You must provide your current password to save any profile adjustments.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Submit Bar -->
+    <div class="flex justify-end pt-4 border-t border-slate-200">
+      <button type="submit" [disabled]="isSaving() || accountForm.invalid"
+        class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium text-xs px-5 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid" [ngClass]="isSaving() ? 'fa-spinner animate-spin' : 'fa-save'"></i>
+        <span>{{ isSaving() ? 'Saving...' : 'Save Settings' }}</span>
+      </button>
+    </div>
+  </form>
+
+</div>

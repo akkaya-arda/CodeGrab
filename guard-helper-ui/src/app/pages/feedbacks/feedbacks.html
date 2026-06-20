@@ -1,0 +1,106 @@
+<div class="flex flex-col w-full h-full bg-slate-50 p-6">
+
+    <!-- Top Toolbar -->
+    <div class="border-b border-slate-200 pb-5 mb-6">
+        <h2 class="text-xl font-bold text-slate-805 tracking-wide">
+            User Feedback Reports
+        </h2>
+        <p class="text-slate-500 text-xs mt-1">Review feedback collected from the public portal regarding Guard code utility.</p>
+    </div>
+
+    <!-- Feedbacks List -->
+    @if(feedbacks().length === 0) {
+    <div class="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-2xl shadow-sm">
+        <div class="w-12 h-12 bg-slate-50 text-slate-400 border border-slate-200 rounded-full flex items-center justify-center text-lg mb-3">
+            <i class="fa-solid fa-comment-slash"></i>
+        </div>
+        <h3 class="text-slate-805 text-sm font-bold">No feedback yet</h3>
+        <p class="text-slate-505 text-xs mt-1">Submissions from the grab portal will show up here.</p>
+    </div>
+    } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @for(item of feedbacks(); track item.id) {
+        <div class="bg-white border rounded-xl p-4 flex flex-col justify-between transition duration-200 shadow-sm"
+            [ngClass]="item.is_working ? 'border-slate-200' : 'border-red-200 bg-red-50/10'">
+            
+            <div class="space-y-4">
+                <!-- Header -->
+                <div class="flex justify-between items-start gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs"
+                            [ngClass]="item.is_working ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'">
+                            <i class="fa-solid" [ngClass]="item.is_working ? 'fa-thumbs-up' : 'fa-thumbs-down'"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-805 tracking-wide">
+                                {{ item.platform }}
+                            </h4>
+                            <span class="text-[9px] text-slate-450">{{ item.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+                        </div>
+                    </div>
+
+                    @if(item.is_working) {
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Worked</span>
+                    } @else {
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold tracking-wider bg-red-50 text-red-700 border border-red-200">Broken Code</span>
+                    }
+                </div>
+
+                <!-- Submitter and Comment -->
+                <div class="space-y-1.5">
+                    <span class="block text-[10px] text-slate-500">Submitted by: <strong class="text-slate-700 font-semibold">{{ item.email }}</strong></span>
+                    @if(item.comment) {
+                        <p class="text-xs text-slate-705 bg-slate-50 p-3 rounded-lg border border-slate-200 italic leading-relaxed">
+                            "{{ item.comment }}"
+                        </p>
+                    } @else {
+                        <p class="text-xs text-slate-450 italic">No comment provided.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Associated Fetch Log Metadata details -->
+            @if(item.fetch_log) {
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mt-4 space-y-1.5 text-[10px] text-slate-600">
+                <span class="block text-slate-500 font-bold tracking-wide text-[8px] mb-1">Scanned Intercept Metadata</span>
+                <div class="flex justify-between">
+                    <span>Account Providers:</span>
+                    <span class="capitalize text-slate-700 font-semibold">{{ item.fetch_log.account_type }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Code Extracted:</span>
+                    <code class="text-emerald-700 font-mono font-bold">{{ item.fetch_log.code || 'None' }}</code>
+                </div>
+                @if(item.fetch_log.error_message) {
+                    <div class="text-red-650 leading-relaxed text-[9px] border-t border-slate-200 pt-1.5 mt-1">
+                        Log Error: {{ item.fetch_log.error_message }}
+                    </div>
+                }
+            </div>
+            }
+
+        </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if(totalPages() > 1) {
+    <div class="flex items-center justify-between px-5 py-4 border border-slate-200 mt-6 bg-white rounded-xl shadow-sm">
+        <span class="text-[10px] text-slate-500 font-medium">
+            Page {{ currentPage() }} of {{ totalPages() }} ({{ totalItems() }} Total Feedbacks)
+        </span>
+        <div class="flex gap-2">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1"
+                class="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-200 disabled:opacity-40 rounded-lg cursor-pointer transition">
+                Prev
+            </button>
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                class="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-200 disabled:opacity-40 rounded-lg cursor-pointer transition">
+                Next
+            </button>
+        </div>
+    </div>
+    }
+    }
+
+</div>

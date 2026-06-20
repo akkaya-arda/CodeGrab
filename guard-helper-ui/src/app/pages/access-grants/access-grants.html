@@ -1,0 +1,625 @@
+<div class="p-6 space-y-6 bg-slate-50 text-slate-800 h-full">
+
+  <!-- Page Header -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-fade-in">
+    <div>
+      <h1 class="text-xl font-bold text-slate-800 tracking-wide">Access Tokens</h1>
+      <p class="text-slate-500 text-xs mt-1">Generate unique, secure invitation links with usage limits for customer
+        code fetching.</p>
+    </div>
+    <button (click)="openWizard()"
+      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs tracking-wider transition cursor-pointer flex items-center gap-2 shadow-sm">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Create Token Link
+    </button>
+  </div>
+
+  <!-- Full-Width Active Tokens Grid -->
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-h-[400px]">
+    <div class="border-b border-slate-200 pb-3 mb-4 flex justify-between items-center">
+      <h2 class="text-base font-semibold flex items-center gap-2 text-slate-800">
+        <i class="fa-solid fa-list"></i> Issued Tokens
+      </h2>
+      <span
+        class="text-xs bg-slate-100 text-slate-650 px-3 py-1 rounded-full border border-slate-200 font-semibold shadow-xs">
+        {{ grants().length }} Total Generated
+      </span>
+    </div>
+
+    <!-- Search & Filter Options Bar -->
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3.5 items-end">
+      <!-- Search Input -->
+      <div class="space-y-1">
+        <label for="searchQuery" class="block text-[10px] font-bold text-slate-500 tracking-wider">SEARCH TOKENS</label>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="searchQuery" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); onFilterChange()" placeholder="Search email, token, tag..."
+            class="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-8 py-1.5 text-xs text-slate-850 outline-none focus:border-indigo-500 transition" />
+          @if (searchQuery()) {
+            <button (click)="searchQuery.set(''); onFilterChange()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer border-none bg-transparent outline-none">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="space-y-1">
+        <label for="filterStatus" class="block text-[10px] font-bold text-slate-500 tracking-wider">STATUS</label>
+        <select id="filterStatus" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); onFilterChange()"
+          class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition cursor-pointer">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+        </select>
+      </div>
+
+      <!-- Platform Filter -->
+      <div class="space-y-1">
+        <label for="filterPlatform" class="block text-[10px] font-bold text-slate-500 tracking-wider">PLATFORM</label>
+        <select id="filterPlatform" [ngModel]="filterPlatform()" (ngModelChange)="filterPlatform.set($event); onFilterChange()"
+          class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition cursor-pointer">
+          <option value="all">All Platforms</option>
+          @for (platform of platforms(); track platform.id) {
+            <option [value]="platform.name">{{ platform.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Tag Filter -->
+      <div class="space-y-1">
+        <label for="filterTag" class="block text-[10px] font-bold text-slate-500 tracking-wider">TAG</label>
+        <select id="filterTag" [ngModel]="filterTag()" (ngModelChange)="filterTag.set($event); onFilterChange()"
+          class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition cursor-pointer">
+          <option value="all">All Tags</option>
+          @for (tag of tags(); track tag) {
+            <option [value]="tag">{{ tag }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Reset Button -->
+      <div>
+        <button type="button" (click)="resetFilters()"
+          class="w-full py-1.5 border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-705 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs h-[32px]">
+          <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    @if (grants().length > 0) {
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 tracking-wider select-none">
+            <th (click)="toggleSort('email')" class="pb-3 pr-2 cursor-pointer hover:text-slate-650 transition">
+              EMAIL
+              @if (sortField() === 'email') {
+                <i class="fa-solid ml-1 text-[8px]" [ngClass]="sortAsc() ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              } @else {
+                <i class="fa-solid fa-sort ml-1 text-[8px] opacity-30"></i>
+              }
+            </th>
+            <th (click)="toggleSort('platform')" class="pb-3 pr-2 cursor-pointer hover:text-slate-655 transition">
+              PLATFORM
+              @if (sortField() === 'platform') {
+                <i class="fa-solid ml-1 text-[8px]" [ngClass]="sortAsc() ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              } @else {
+                <i class="fa-solid fa-sort ml-1 text-[8px] opacity-30"></i>
+              }
+            </th>
+            <th (click)="toggleSort('uses')" class="pb-3 pr-2 cursor-pointer hover:text-slate-655 transition">
+              USES / LIMIT
+              @if (sortField() === 'uses') {
+                <i class="fa-solid ml-1 text-[8px]" [ngClass]="sortAsc() ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              } @else {
+                <i class="fa-solid fa-sort ml-1 text-[8px] opacity-30"></i>
+              }
+            </th>
+            <th (click)="toggleSort('expires_at')" class="pb-3 pr-2 cursor-pointer hover:text-slate-655 transition">
+              EXPIRES AT
+              @if (sortField() === 'expires_at') {
+                <i class="fa-solid ml-1 text-[8px]" [ngClass]="sortAsc() ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              } @else {
+                <i class="fa-solid fa-sort ml-1 text-[8px] opacity-30"></i>
+              }
+            </th>
+            <th class="pb-3 pr-2">STATUS</th>
+            <th class="pb-3 text-right">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (grant of paginatedGrants(); track grant.id) {
+          <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors text-xs">
+            <td class="py-3.5 pr-2 font-medium text-slate-800">
+              {{ grant.email }}
+              @if (grant.hide_email) {
+                <span class="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md" title="Email hidden on grab-code portal">
+                  <i class="fa-solid fa-eye-slash text-[9px]"></i> hidden
+                </span>
+              }
+            </td>
+            <td class="py-3.5 pr-2">
+              <span
+                class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">{{
+                grant.platform }}</span>
+            </td>
+            <td class="py-3.5 pr-2">
+              <div class="flex items-center gap-2">
+                @if (grant.limit !== null) {
+                <span class="font-mono font-bold"
+                  [ngClass]="grant.uses >= grant.limit ? 'text-slate-400' : 'text-indigo-600'">{{ grant.uses }} / {{
+                  grant.limit }}</span>
+                <!-- Progress bar -->
+                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-indigo-600 transition-all duration-500"
+                    [style.width.%]="(grant.uses / grant.limit) * 100"
+                    [ngClass]="{'bg-slate-300': grant.uses >= grant.limit}">
+                  </div>
+                </div>
+                } @else {
+                <span class="font-mono font-bold text-emerald-600">{{ grant.uses }} / ∞</span>
+                <!-- Endless glowing progress bar -->
+                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+                  <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 w-full animate-pulse"></div>
+                </div>
+                }
+              </div>
+            </td>
+            <td class="py-3.5 pr-2">
+              @if (grant.expires_at) {
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2.5 py-0.5 rounded-lg shadow-xs">
+                  <i class="fa-solid fa-calendar-days text-[9px] text-indigo-400"></i>
+                  {{ grant.expires_at | date:'MMM d, yyyy HH:mm' }}
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-lg">
+                  Never
+                </span>
+              }
+            </td>
+            <td class="py-3.5 pr-2">
+              @if (!isExpired(grant)) {
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-450 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                  Expired
+                </span>
+              }
+            </td>
+            <td class="py-3.5 text-right space-x-1.5 whitespace-nowrap">
+              <button (click)="copyLink(grant.token)" [disabled]="isExpired(grant)"
+                class="px-2.5 py-1 text-[10px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-copy text-slate-500 mr-0.5"></i> Copy Link
+              </button>
+              <button (click)="deleteToken(grant.id!)"
+                class="px-2.5 py-1 text-[10px] font-semibold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition cursor-pointer shadow-xs">
+                <i class="fa-solid fa-trash-can mr-0.5"></i> Revoke
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination & Stats Footer -->
+    <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500 select-none">
+      <div class="flex items-center gap-2">
+        <span>Showing</span>
+        <span class="text-slate-800 font-bold">
+          {{ rangeStart() }}
+          to
+          {{ rangeEnd() }}
+        </span>
+        <span>of</span>
+        <span class="text-slate-800 font-bold">{{ filteredGrants().length }}</span>
+        <span>tokens</span>
+        @if (filteredGrants().length !== grants().length) {
+          <span class="text-slate-400 font-normal">(filtered from {{ grants().length }} total)</span>
+        }
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Page size selector -->
+        <div class="flex items-center gap-1.5">
+          <span>Per page:</span>
+          <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)"
+            class="bg-white border border-slate-305 rounded px-2 py-1 text-xs text-slate-700 outline-none cursor-pointer focus:border-indigo-500 transition">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+
+        <!-- Page numbers navigation -->
+        <div class="flex items-center gap-1">
+          <button (click)="setPage(1)" [disabled]="currentPage() === 1"
+            class="px-2 py-1 border border-slate-200 rounded-md hover:bg-slate-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition bg-white text-slate-700">
+            <i class="fa-solid fa-angles-left text-[9px]"></i>
+          </button>
+          <button (click)="prevPage()" [disabled]="currentPage() === 1"
+            class="px-2.5 py-1 border border-slate-200 rounded-md hover:bg-slate-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 bg-white text-slate-700">
+            <i class="fa-solid fa-angle-left text-[10px]"></i> Prev
+          </button>
+          
+          <span class="px-3 py-1 font-bold text-indigo-600 bg-indigo-50 border border-indigo-150 rounded-md">
+            {{ currentPage() }} / {{ totalPages() }}
+          </span>
+
+          <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+            class="px-2.5 py-1 border border-slate-200 rounded-md hover:bg-slate-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 bg-white text-slate-700">
+            Next <i class="fa-solid fa-angle-right text-[10px]"></i>
+          </button>
+          <button (click)="setPage(totalPages())" [disabled]="currentPage() === totalPages()"
+            class="px-2 py-1 border border-slate-200 rounded-md hover:bg-slate-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition bg-white text-slate-700">
+            <i class="fa-solid fa-angles-right text-[9px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div class="text-center py-12 text-slate-400">
+      <i class="fa-solid fa-key text-4xl text-slate-200 mb-3 block"></i>
+      <span class="text-xs">No active or expired invitation tokens have been generated yet.</span>
+    </div>
+    }
+  </div>
+
+  <!-- Wizard Modal Overlay -->
+  @if (showWizard()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+    <div
+      class="w-full max-w-2xl bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[530px]">
+
+      <!-- Left Sidebar Steps -->
+      <div class="hidden md:flex md:w-1/3 bg-slate-900 text-slate-300 p-6 flex-col justify-between">
+        <div class="space-y-6">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 text-lg animate-pulse"></i>
+            <span class="font-bold text-white tracking-wide">Token Wizard</span>
+          </div>
+
+          <div class="space-y-4 pt-4">
+            <!-- Step 1 -->
+            <div class="flex items-center gap-3 text-xs"
+              [ngClass]="{'text-white font-bold': wizardStep() === 1, 'text-slate-500': wizardStep() !== 1}">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center border font-mono transition-all"
+                [ngClass]="wizardStep() === 1 ? 'border-indigo-500 bg-indigo-600 text-white' : (wizardStep() > 1 ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-700 text-slate-600')">
+                @if (wizardStep() > 1) { <i class="fa-solid fa-check text-[10px]"></i> } @else { 1 }
+              </div>
+              <span>Select Account</span>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex items-center gap-3 text-xs"
+              [ngClass]="{'text-white font-bold': wizardStep() === 2, 'text-slate-500': wizardStep() !== 2}">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center border font-mono transition-all"
+                [ngClass]="wizardStep() === 2 ? 'border-indigo-500 bg-indigo-600 text-white' : (wizardStep() > 2 ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-700 text-slate-650')">
+                @if (wizardStep() > 2) { <i class="fa-solid fa-check text-[10px]"></i> } @else { 2 }
+              </div>
+              <span>Choose Platform</span>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex items-center gap-3 text-xs"
+              [ngClass]="{'text-white font-bold': wizardStep() === 3, 'text-slate-500': wizardStep() !== 3}">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center border font-mono transition-all"
+                [ngClass]="wizardStep() === 3 ? 'border-indigo-500 bg-indigo-600 text-white' : (wizardStep() > 3 ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-700 text-slate-650')">
+                @if (wizardStep() > 3) { <i class="fa-solid fa-check text-[10px]"></i> } @else { 3 }
+              </div>
+              <span>Set Usage Limits</span>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flex items-center gap-3 text-xs"
+              [ngClass]="{'text-white font-bold': wizardStep() === 4, 'text-slate-500': wizardStep() !== 4}">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center border font-mono transition-all"
+                [ngClass]="wizardStep() === 4 ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-700 text-slate-650'">
+                4
+              </div>
+              <span>Access Link</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[10px] text-slate-500">
+          Secure client authentication links.
+        </div>
+      </div>
+
+      <!-- Right Content Panel -->
+      <div class="w-full md:w-2/3 p-6 flex flex-col justify-between h-full bg-white relative">
+        <!-- Close Modal Button -->
+        <button (click)="closeWizard()"
+          class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 cursor-pointer transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+
+        <!-- Step 1: Select Email -->
+        @if (wizardStep() === 1) {
+        <div class="flex-1 flex flex-col justify-between h-full">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Select Email Account</h3>
+            <p class="text-slate-500 text-[11px] mt-0.5">Select the email account that will host guard interception
+              mails.</p>
+
+            <!-- Email Search -->
+            <div class="relative mt-4 mb-3">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+              <input type="text" [(ngModel)]="emailSearchQuery" placeholder="Search email accounts..."
+                class="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition" />
+            </div>
+
+            <!-- Emails scroll -->
+            <div class="max-h-[220px] overflow-y-auto pr-1 space-y-2">
+              @if (filteredEmails().length > 0) {
+              @for (email of filteredEmails(); track email) {
+              <button type="button" (click)="selectWizardEmail(email)"
+                class="w-full text-left p-2.5 border rounded-lg flex justify-between items-center transition cursor-pointer"
+                [ngClass]="wizardSelectedEmail() === email ? 'border-indigo-600 bg-indigo-50/10' : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50'">
+                <div class="flex items-center gap-2 min-w-0">
+                  <i class="fa-solid fa-envelope text-slate-400 text-xs"></i>
+                  <span class="text-xs text-slate-700 font-semibold truncate">{{ email }}</span>
+                </div>
+                @if (wizardSelectedEmail() === email) {
+                <i class="fa-solid fa-circle-check text-indigo-600 text-xs"></i>
+                }
+              </button>
+              }
+              } @else {
+              <div class="p-6 text-center text-slate-400 bg-slate-50 border border-dashed rounded-lg">
+                <i class="fa-solid fa-circle-info text-lg text-slate-300 mb-1 block"></i>
+                <span class="text-xs">No registered email accounts found.</span>
+              </div>
+              }
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-3 border-t border-slate-100">
+            <button type="button" (click)="nextStep()" [disabled]="!wizardSelectedEmail()"
+              class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition disabled:opacity-40 cursor-pointer shadow-xs flex items-center gap-1">
+              <span>Continue</span> <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- Step 2: Choose Platform -->
+        @else if (wizardStep() === 2) {
+        <div class="flex-1 flex flex-col justify-between h-full">
+          <div>
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="prevStep()" class="text-slate-400 hover:text-slate-700 transition">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+              </button>
+              <h3 class="text-sm font-bold text-slate-800">Choose Gaming Platform</h3>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Select the gaming platform filters for this secure link.</p>
+
+            <!-- Platform Search -->
+            <div class="relative mt-4 mb-3">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+              <input type="text" [(ngModel)]="platformSearchQuery" placeholder="Search platforms..."
+                class="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition" />
+            </div>
+
+            <!-- Platform Grid scroll -->
+            <div class="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
+              @if (filteredPlatforms().length > 0) {
+              @for (platform of filteredPlatforms(); track platform.id) {
+              <button type="button" (click)="selectWizardPlatform(platform.name)"
+                class="flex flex-col items-center justify-center p-3 border rounded-xl transition cursor-pointer group text-center"
+                [ngClass]="wizardSelectedPlatform() === platform.name ? 'border-indigo-600 bg-indigo-50/10' : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50'">
+                <img [src]="platform.logo" [alt]="platform.name"
+                  class="h-6 w-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
+                <span class="text-[9px] font-bold text-slate-500 mt-2 block truncate w-full group-hover:text-slate-800"
+                  [ngClass]="{'text-indigo-650': wizardSelectedPlatform() === platform.name}">
+                  {{ platform.name }}
+                </span>
+              </button>
+              }
+              } @else {
+              <div class="col-span-3 p-6 text-center text-slate-400 bg-slate-50 border border-dashed rounded-lg">
+                <i class="fa-solid fa-circle-info text-lg text-slate-300 mb-1 block"></i>
+                <span class="text-xs">No matching platforms found.</span>
+              </div>
+              }
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+            <button type="button" (click)="prevStep()"
+              class="px-3.5 py-1.5 text-slate-700 hover:bg-slate-55 bg-white border border-slate-200 text-xs font-semibold rounded-lg transition cursor-pointer shadow-xs">
+              Back
+            </button>
+            <button type="button" (click)="nextStep()" [disabled]="!wizardSelectedPlatform()"
+              class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition disabled:opacity-40 cursor-pointer shadow-xs flex items-center gap-1">
+              <span>Continue</span> <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- Step 3: Setup Limit -->
+        @else if (wizardStep() === 3) {
+        <div class="flex-1 flex flex-col justify-between h-full min-h-0">
+          <div class="overflow-y-auto pr-1 flex-1 min-h-0 max-h-[390px] space-y-4">
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="prevStep()" class="text-slate-400 hover:text-slate-700 transition">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+              </button>
+              <h3 class="text-sm font-bold text-slate-800">Set Usage Limits</h3>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Determine the maximum number of times this token can retrieve
+              codes.</p>            <div class="space-y-3 mt-4">
+              <!-- Unlimited Toggle Option -->
+              <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <input type="checkbox" id="wizardUnlimited" [ngModel]="wizardUnlimited()"
+                  (ngModelChange)="wizardUnlimited.set($event)"
+                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-350 rounded cursor-pointer" />
+                <label for="wizardUnlimited" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  Unlimited Usage (No limit)
+                </label>
+              </div>
+
+              <!-- Set Expiration Date Toggle Option -->
+              <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <input type="checkbox" id="wizardHasExpiry" [ngModel]="wizardHasExpiry()"
+                  (ngModelChange)="wizardHasExpiry.set($event)"
+                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-350 rounded cursor-pointer" />
+                <label for="wizardHasExpiry" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  Set Expiration Date
+                </label>
+              </div>
+
+              <!-- Hide Email Toggle Option -->
+              <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <input type="checkbox" id="wizardHideEmail" [ngModel]="wizardHideEmail()"
+                  (ngModelChange)="wizardHideEmail.set($event)"
+                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-350 rounded cursor-pointer" />
+                <label for="wizardHideEmail" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  Hide Email on Portal
+                </label>
+              </div>
+
+              <!-- Expiration Date Picker (Visible if toggled) -->
+              @if (wizardHasExpiry()) {
+                <div class="space-y-1.5 p-2 bg-indigo-50/10 border border-indigo-150 rounded-lg">
+                  <label for="wizardExpiresAt" class="block text-[10px] font-bold text-slate-500 tracking-wider">EXPIRATION DATE & TIME</label>
+                  <input type="datetime-local" id="wizardExpiresAt" [ngModel]="wizardExpiresAt()"
+                    (ngModelChange)="wizardExpiresAt.set($event)"
+                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500 transition cursor-pointer" />
+                </div>
+              }
+
+              <!-- Precision Slider & Quick Options -->
+              @if (!wizardUnlimited()) {
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] font-bold text-slate-500 tracking-wider">USAGE COUNT LIMIT</span>
+                    <span
+                      class="text-xs font-bold text-indigo-650 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-150">{{
+                      wizardLimit() }} times</span>
+                  </div>
+                  <input type="range" [ngModel]="wizardLimit()" (ngModelChange)="wizardLimit.set($event)" min="1"
+                    max="100" step="1"
+                    class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                </div>
+
+                <!-- Quick options -->
+                <div>
+                  <span class="block text-[9px] font-bold text-slate-400 mb-1.5">QUICK OPTIONS</span>
+                  <div class="flex gap-2">
+                    @for (val of [5, 10, 20, 50]; track val) {
+                    <button type="button" (click)="setQuickLimit(val)"
+                      class="px-3 py-1 border rounded-lg text-xs font-semibold cursor-pointer transition shadow-xs"
+                      [ngClass]="wizardLimit() === val 
+    ? 'bg-indigo-600 text-white border-indigo-600' 
+    : 'bg-white hover:bg-slate-55 text-slate-700 border-slate-200'">
+                      {{ val }} uses
+                    </button>
+                    }
+                  </div>
+                </div>
+              </div>
+              }
+
+              <!-- Visual Summary Card -->
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mt-2 space-y-2 text-xs">
+                <div class="flex justify-between items-center min-w-0 gap-2">
+                  <span class="text-slate-450">Email:</span>
+                  <span class="font-bold text-slate-700 truncate block">{{ wizardSelectedEmail() }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-450">Platform:</span>
+                  <span
+                    class="font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded border border-indigo-100">{{
+                    wizardSelectedPlatform() }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-450">Max Interceptions:</span>
+                  <span class="font-bold text-slate-700" [ngClass]="{'text-emerald-650': wizardUnlimited()}">
+                    {{ wizardUnlimited() ? 'Unlimited' : wizardLimit() + ' times' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-450">Expiration:</span>
+                  <span class="font-bold text-slate-705" [ngClass]="{'text-indigo-650 font-bold': wizardHasExpiry() && wizardExpiresAt()}">
+                    {{ (wizardHasExpiry() && wizardExpiresAt()) ? (wizardExpiresAt() | date:'MMM d, yyyy HH:mm') : 'Never Expires' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-450">Hide Email:</span>
+                  <span class="font-bold text-slate-700" [ngClass]="{'text-indigo-650 font-bold': wizardHideEmail()}">
+                    {{ wizardHideEmail() ? 'Yes' : 'No' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+            <button type="button" (click)="prevStep()"
+              class="px-3.5 py-1.5 text-slate-700 hover:bg-slate-55 bg-white border border-slate-200 text-xs font-semibold rounded-lg transition cursor-pointer shadow-xs">
+              Back
+            </button>
+            <button type="button" (click)="generateWizardToken()" [disabled]="isSubmitting()"
+              class="px-5 py-1.5 bg-indigo-600 hover:bg-indigo-700 border border-indigo-750 text-white font-bold text-xs rounded-lg transition cursor-pointer shadow-sm flex items-center gap-1.5">
+              <i class="fa-solid animate-spin" [ngClass]="isSubmitting() ? 'fa-spinner' : 'hidden'"></i>
+              <span>{{ isSubmitting() ? 'Generating...' : 'Generate Token Link' }}</span>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- Step 4: Success Done -->
+        @else if (wizardStep() === 4) {
+        <div class="flex-1 flex flex-col justify-between text-center py-4 h-full">
+          <div class="space-y-6">
+            <!-- Checkmark circle -->
+            <div
+              class="w-12 h-12 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center text-lg mx-auto">
+              <i class="fa-solid fa-check"></i>
+            </div>
+
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-slate-800 tracking-wide">Access Link Generated!</h3>
+              <p class="text-slate-500 text-[11px] max-w-sm mx-auto">Customers opening this link can fetch codes
+                directly within limits.</p>
+            </div>
+
+            <!-- Monospace URL box -->
+            <div class="flex gap-2 items-center bg-slate-50 border border-slate-200 rounded-lg p-2 max-w-md mx-auto">
+              <input type="text" readonly [value]="generatedTokenLink()"
+                class="flex-1 font-mono text-[10px] text-slate-600 bg-transparent outline-none truncate border-none px-1" />
+              <button type="button" (click)="copyWizardLink()"
+                class="p-1 px-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-md text-[10px] text-slate-700 font-semibold cursor-pointer shadow-xs transition">
+                Copy Link
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-center pt-3 border-t border-slate-100 gap-3">
+            <button type="button" (click)="openWizard()"
+              class="px-4 py-1.5 text-slate-700 hover:bg-slate-50 bg-white border border-slate-200 text-xs font-semibold rounded-lg transition cursor-pointer shadow-xs">
+              Generate Another
+            </button>
+            <button type="button" (click)="closeWizard()"
+              class="px-4.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition cursor-pointer">
+              Close Wizard
+            </button>
+          </div>
+        </div>
+        }
+
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

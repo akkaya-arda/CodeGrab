@@ -1,0 +1,400 @@
+<div class="p-6 space-y-6 text-slate-800 bg-slate-50">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+    <div>
+      <h1 class="text-xl font-bold text-slate-805 tracking-wide">Platform Management</h1>
+      <p class="text-slate-500 text-xs mt-1">Configure preset and custom platform filters with regex matchers.</p>
+    </div>
+    <button (click)="onClickAddPlatform()"
+      class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+      <i class="fa fa-plus"></i> Add Custom Platform
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Platforms Grid (Left/Middle Column) -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-base font-semibold mb-4 flex items-center gap-2 text-blue-600">
+          <i class="fa-solid fa-gamepad"></i> Configured Platforms ({{ platforms().length }})
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for(platform of platforms(); track platform.id) {
+          <div
+            class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between hover:border-slate-300 transition-all shadow-sm">
+            <div class="flex items-start gap-4">
+              <img [src]="platform.logo" alt="{{ platform.name }} logo"
+                class="w-12 h-12 object-contain bg-white p-1.5 rounded-lg border border-slate-200"
+                onError="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e4/Globe_icon_2.svg'" />
+              <div class="space-y-1.5 flex-1 min-w-0">
+                <h3 class="font-bold text-sm text-slate-800 truncate">{{ platform.name }}</h3>
+                <p class="text-xs text-slate-505 truncate">
+                  <span class="font-semibold text-slate-600">From:</span> {{ platform.sender }}
+                </p>
+                <p class="text-xs text-slate-505 truncate" *ngIf="platform.subject">
+                  <span class="font-semibold text-slate-600">Subj:</span> {{ platform.subject }}
+                </p>
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  <span *ngIf="platform.enable_heuristic"
+                    class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-250 text-emerald-700">
+                    Heuristics: {{ platform.grabbing_strategy === 'heuristic_first' ? 'Priority' : 'Fallback' }}
+                  </span>
+                  <span *ngIf="!platform.enable_heuristic"
+                    class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500">
+                    Heuristics: Off
+                  </span>
+                </div>
+                <div *ngIf="platform.regex"
+                  class="bg-white p-2 rounded border border-slate-200 text-[10px] font-mono text-blue-600 overflow-x-auto whitespace-nowrap scrollbar-thin mt-2">
+                  {{ platform.regex }}
+                </div>
+                <div *ngIf="!platform.regex"
+                  class="bg-white p-2 rounded border border-dashed border-slate-200 text-[10px] font-sans text-slate-400 italic mt-2">
+                  No regex filter configured
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2 justify-end mt-4 pt-3 border-t border-slate-200">
+              <button (click)="onClickEditPlatform(platform)"
+                class="text-xs text-slate-700 hover:bg-slate-50 bg-white border border-slate-200 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer shadow-xs">
+                <i class="fa fa-edit"></i> Edit
+              </button>
+              <button (click)="onClickDeletePlatform(platform)"
+                class="text-xs text-red-650 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1 border border-red-200 cursor-pointer">
+                <i class="fa fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Restrictions panel (Right Column) -->
+    <div class="space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-base font-semibold mb-2 flex items-center gap-2 text-indigo-600">
+          <i class="fa-solid fa-envelope-open-text"></i> Account Assignments
+        </h2>
+        <p class="text-xs text-slate-500 mb-4">
+          Control which platforms each email account can intercept codes for. Accounts with no mappings allow all
+          platforms.
+        </p>
+
+        <div class="space-y-3">
+          @for(account of emailAccounts(); track account.email) {
+          <div
+            class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3 hover:border-slate-300 transition-colors shadow-sm">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded" [ngClass]="{
+                      'bg-red-50 border border-red-200 text-red-700': account.type === 'gmail',
+                      'bg-sky-50 border border-sky-200 text-sky-700': account.type === 'outlook',
+                      'bg-indigo-50 border border-indigo-200 text-indigo-700': account.type === 'imap'
+                    }">
+                  {{ account.type }}
+                </span>
+                <span class="text-xs text-slate-450">Account</span>
+              </div>
+              <p class="text-sm font-semibold truncate text-slate-700">{{ account.email }}</p>
+            </div>
+            <button (click)="onClickManageAssignments(account.email)"
+              class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+              <i class="fa-solid fa-sliders"></i> Configure
+            </button>
+          </div>
+          }
+          @if(emailAccounts().length === 0) {
+          <div class="text-center py-6 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <i class="fa fa-envelope text-2xl mb-2 block text-slate-400"></i>
+            No email accounts configured.
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Heuristic Scoring Info Panel & Global Toggle -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h2 class="text-base font-semibold flex items-center gap-2 text-indigo-600">
+            <i class="fa-solid fa-brain animate-pulse"></i> Heuristic Scoring Algorithm
+          </h2>
+        </div>
+
+        <div class="text-xs text-slate-650 space-y-3 leading-relaxed">
+          <p>
+            Heuristic scoring is an intelligent code-grabbing technique. Instead of relying on strict regular
+            expressions, it scans the email content for alphanumeric tokens (length 4–8) and weights them based on
+            formatting and proximity to verification keywords.
+          </p>
+          <p>
+            This algorithm can be customized in the backend codebase at:
+            <code
+              class="block mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-mono text-[10px] text-blue-600 overflow-x-auto select-all">
+              app/Services/CodeExtractor.php
+            </code>
+            Under the <code class="font-mono font-bold text-[10px] text-blue-600">extractHeuristic()</code> method, you
+            can adjust:
+          </p>
+          <ul class="list-disc pl-5 space-y-2 text-[11px] text-slate-500">
+            <li><strong>Verification Keywords:</strong> Adjust keywords like 'code', 'pin', 'otp', etc.</li>
+            <li><strong>Score Weights:</strong> Fine-tune numeric vs. alphanumeric length points.</li>
+            <li><strong>Proximity Distance:</strong> Control the score bonus depending on distance from keywords.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Platform -->
+  <div *ngIf="showAddEditModal()"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-white border border-slate-200 rounded-xl w-full max-w-4xl shadow-2xl my-8">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50 rounded-t-xl">
+        <h3 class="text-base font-bold text-slate-800">
+          {{ isEditing() ? 'Modify Platform details' : 'Configure Custom Platform' }}
+        </h3>
+        <button (click)="onClickCloseModal()"
+          class="text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
+          <i class="fa fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Main Form Left -->
+        <form [formGroup]="platformForm" (ngSubmit)="onSubmitPlatform()" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-550 tracking-wider mb-1.5">Platform Name</label>
+            <input type="text" formControlName="name" placeholder="e.g. Disney+"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-805 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-550 tracking-wider mb-1.5">Platform Logo</label>
+            <div class="flex gap-2">
+              <input type="text" formControlName="logo" placeholder="https://..."
+                class="flex-1 bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-805 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+              <label
+                class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 select-none">
+                <i class="fa-solid" [ngClass]="isUploadingLogo() ? 'fa-spinner animate-spin' : 'fa-upload'"></i>
+                <span>{{ isUploadingLogo() ? 'Uploading...' : 'Upload File' }}</span>
+                <input type="file" class="hidden" accept="image/*" (change)="onLogoFileSelected($event)"
+                  [disabled]="isUploadingLogo()" />
+              </label>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1">Provide a logo image URL OR upload a local file directly.</p>
+
+            <!-- Logo Preview -->
+            <div *ngIf="platformForm.get('logo')?.value"
+              class="mt-3.5 flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 w-fit">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Preview:</span>
+              <div
+                class="relative w-10 h-10 bg-white border border-slate-200 rounded p-1 flex items-center justify-center shrink-0">
+                <img [src]="platformForm.get('logo')?.value" alt="Logo preview"
+                  class="max-w-full max-h-full object-contain"
+                  onError="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e4/Globe_icon_2.svg'" />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-550 tracking-wider mb-1.5">Sender Match</label>
+              <input type="text" formControlName="sender" placeholder="noreply@steampowered.com"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-805 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-550 tracking-wider mb-1.5">Subject Match
+                (Opt)</label>
+              <input type="text" formControlName="subject" placeholder="Steam Guard"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-805 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+            </div>
+          </div>
+
+          <!-- Heuristic Scoring Configuration -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" formControlName="enable_heuristic"
+                class="w-4 h-4 bg-white border-slate-350 rounded text-blue-600 focus:ring-blue-500" />
+              <span class="text-xs font-bold text-slate-700">Enable Heuristic Scoring Algorithm
+                (Suggested)</span>
+            </label>
+            <p class="text-[10px] text-slate-500">
+              Heuristic scoring scans the email for code-like patterns (length 4-8, numeric or uppercase) and scores
+              candidates based on proximity to verification keywords. <b>It may cause false-positive results.</b>
+            </p>
+
+            <div *ngIf="platformForm.get('enable_heuristic')?.value" class="space-y-1.5 pt-2 border-t border-slate-200">
+              <label class="block text-xs font-semibold text-slate-550 tracking-wider">Algorithm Execution
+                Priority</label>
+              <select formControlName="grabbing_strategy"
+                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-805 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors">
+                <option value="heuristic_first">Heuristic First (Fallback to Regex)</option>
+                <option value="regex_first">Regex First (Fallback to Heuristic)</option>
+              </select>
+              <p class="text-[10px] text-slate-500 mt-1">
+                Choose which algorithm runs first. The second acts as a fallback if the first finds no valid code.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-semibold text-slate-550 tracking-wider">Guard Code Regex Pattern
+                (Optional)</label>
+              <button type="button" (click)="syncFormRegex()"
+                class="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors bg-white px-2 py-0.5 rounded border border-slate-200 cursor-pointer shadow-xs">
+                <i class="fa fa-sync-alt"></i> Sync to Tester
+              </button>
+            </div>
+            <input type="text" formControlName="regex" placeholder="/(?i:code).{1,50}?\b([A-Z0-9]{5})\b/su"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-mono text-blue-600 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+            <p class="text-[10px] text-slate-500 mt-1">Must be a valid PHP PCRE pattern. Include capture groups `(...)`
+              to capture just the code portion.</p>
+          </div>
+
+          <div class="flex gap-3 justify-end pt-4 border-t border-slate-200">
+            <button type="button" (click)="onClickCloseModal()"
+              class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-lg font-medium transition-colors text-sm cursor-pointer shadow-xs">
+              Cancel
+            </button>
+            <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm shadow-sm cursor-pointer">
+              Save Platform
+            </button>
+          </div>
+        </form>
+
+        <!-- Regex Tester Right -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200">
+              <h4 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-vial"></i> Live Regex Match Tester
+              </h4>
+              <span
+                class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500">Sandbox</span>
+            </div>
+
+            <form [formGroup]="regexForm" class="space-y-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 tracking-wider mb-1">Regex Pattern Under
+                  Test</label>
+                <input type="text" formControlName="regex" placeholder="/.../su"
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-blue-600 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors" />
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 tracking-wider mb-1">Mock Email Raw Body
+                  Text</label>
+                <textarea formControlName="body" rows="6"
+                  placeholder="Paste the text contents of a typical guard code email here..."
+                  class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-sans focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors resize-none scrollbar-thin"></textarea>
+              </div>
+
+              <div class="flex gap-2">
+                <button type="button" (click)="testRegex()" [disabled]="isTestingRegex()"
+                  class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm">
+                  <i class="fa fa-play text-[10px]" *ngIf="!isTestingRegex()"></i>
+                  <i class="fa fa-spinner animate-spin text-[10px]" *ngIf="isTestingRegex()"></i>
+                  Run Match Evaluation
+                </button>
+                <button type="button" (click)="applyTesterRegexToMain()"
+                  class="bg-white hover:bg-slate-50 text-blue-600 hover:text-blue-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 border border-slate-200 cursor-pointer shadow-xs">
+                  <i class="fa fa-arrow-left"></i> Apply to Main Form
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Evaluation Results -->
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <h5 class="text-xs font-bold text-slate-500 mb-2">Tester Diagnostics:</h5>
+
+            <!-- Error message if regex compile fails -->
+            <div *ngIf="testError()"
+              class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-mono mb-2">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ testError() }}
+            </div>
+
+            <div class="space-y-2 text-xs text-slate-700">
+              <div class="flex justify-between items-center py-1 border-b border-slate-200">
+                <span class="text-slate-500">Evaluation Outcome:</span>
+                <span class="font-bold px-2 py-0.5 rounded"
+                  [ngClass]="testMatched() ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'">
+                  {{ testMatched() ? 'MATCH FOUND' : 'NO MATCH' }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-200" *ngIf="testMatched()">
+                <span class="text-slate-500">Extracted Code:</span>
+                <span
+                  class="font-mono font-bold bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded border border-blue-200 text-sm tracking-wider">
+                  {{ testResultCode() }}
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1">
+                Tip: Standard alphanumeric matches must extract precisely the guard code. Make sure that signatures or
+                usernames do not false-positive.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Email Platform Assignments Manager -->
+  <div *ngIf="showAssignmentsModal()"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div class="bg-white border border-slate-200 rounded-xl w-full max-w-lg shadow-2xl">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50 rounded-t-xl">
+        <div>
+          <h3 class="text-base font-bold text-slate-800">Email Platform Restrictions</h3>
+          <p class="text-xs text-slate-500 mt-0.5 truncate max-w-sm">{{ selectedEmail() }}</p>
+        </div>
+        <button (click)="onCloseAssignmentsModal()"
+          class="text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
+          <i class="fa fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-xs text-slate-650 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <i class="fa fa-info-circle text-blue-600 me-1"></i> Check the platforms this email account is authorized to
+          fetch codes for. If no platforms are selected, the account will default to allowing <strong>all
+            platforms</strong>.
+        </p>
+
+        <div class="max-h-60 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
+          @for(platform of platforms(); track platform.id) {
+          <label
+            class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:border-slate-350 cursor-pointer select-none">
+            <input type="checkbox" [checked]="isPlatformAssigned(platform.id!)"
+              (change)="togglePlatformAssignment(platform.id!)"
+              class="w-4 h-4 bg-white border-slate-300 rounded text-indigo-600 focus:ring-indigo-500" />
+            <img [src]="platform.logo" alt="{{ platform.name }} logo"
+              class="w-8 h-8 object-contain bg-white p-1 rounded border border-slate-200"
+              onError="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e4/Globe_icon_2.svg'" />
+            <span class="text-sm font-semibold flex-1 text-slate-850">{{ platform.name }}</span>
+          </label>
+          }
+        </div>
+
+        <div class="flex gap-3 justify-end pt-4 border-t border-slate-200">
+          <button type="button" (click)="onCloseAssignmentsModal()"
+            class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-lg font-medium transition-colors text-sm cursor-pointer shadow-xs">
+            Cancel
+          </button>
+          <button type="button" (click)="onSaveAssignments()"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm shadow cursor-pointer flex items-center gap-1.5">
+            <i class="fa fa-save"></i> Save Configuration
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

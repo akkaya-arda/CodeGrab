@@ -1,0 +1,109 @@
+<div class="flex w-full h-[100vh] bg-slate-50 text-slate-800 font-sans">
+    <!-- Sidebar -->
+    <div class="md:min-w-[220px] md:w-[30%] md:max-w-[260px] bg-slate-900 transition-all shadow-md">
+        <div class="p-6 border-b border-slate-800/50">
+            <div class="flex items-center justify-center gap-3 text-center font-medium text-gray-300">
+                @if (themeService.logoEnabled() && themeService.getLogoUrl()) {
+                <img [src]="themeService.getLogoUrl()" class="h-8 max-w-[70px] object-contain rounded shadow-xs"
+                    [alt]="themeService.systemName()" />
+                }
+                <div class="text-left">
+                    <span class="font-system-name text-md font-semibold block text-white leading-tight">{{
+                        themeService.systemName()
+                        }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 w-full space-y-2">
+            @for(navItem of navItems; track $index) {
+            @if(navItem.children) {
+            <div class="">
+                <div class="flex cursor-pointer justify-between items-center text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"
+                    (click)="navItem.isHidden = !navItem.isHidden">
+                    <span class="w-full px-3.5 py-2.5 flex items-center">
+                        <i class="{{navItem.icon}} me-2 w-5 text-center text-slate-400"></i>
+                        <span>{{ navItem.label }}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down me-3 transition-transform duration-300 text-xs text-slate-550"
+                        [class.rotate-180]="!navItem.isHidden"></i>
+                </div>
+
+                <div class="transition-all duration-300 ease-in-out overflow-hidden space-y-1"
+                    [class.max-h-0]="navItem.isHidden" [class.max-h-40]="!navItem.isHidden">
+
+                    @for(child of navItem.children; track $index) {
+                    <a [routerLink]="child.routerLink"
+                        class="text-slate-400 w-[calc(100%-1rem)] ms-4 px-3.5 py-2 flex items-center rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:text-white text-xs"
+                        routerLinkActive="active">
+                        <i class="{{child.icon}} me-2 w-4 text-center text-slate-400"></i>
+                        <span>{{child.label}}</span>
+                    </a>
+                    }
+                </div>
+            </div>
+            } @else {
+            <a [routerLink]="navItem.routerLink"
+                class="text-slate-300 w-full px-3.5 py-2.5 flex items-center rounded-lg hover:bg-slate-800 transition-all duration-200 hover:text-white"
+                routerLinkActive="active">
+                <i class="{{navItem.icon}} me-2 w-5 text-center text-slate-400"></i>
+                <span>{{navItem.label}}</span>
+                @if(navItem.badgeCount && navItem.badgeCount() > 0) {
+                <span
+                    class="ms-auto bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-5 text-center">
+                    {{ navItem.badgeCount() }}
+                </span>
+                }
+            </a>
+            }
+            }
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <div class="w-full bg-white border-b border-slate-200 shadow-sm">
+            <div class="flex items-center p-5 justify-between text-slate-800">
+                <span class="flex items-center font-bold text-sm">
+                    {{layoutServices.pageTitle()}}
+                </span>
+
+                <div class="relative">
+                    <button type="button" (click)="toggleDropdown()"
+                        class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer select-none bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shadow-xs">
+                        <i class="fa-solid fa-circle-user text-indigo-600 text-sm"></i>
+                        <span>{{ currentUser()?.name || 'Administrator' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-450 transition-transform duration-200"
+                            [class.rotate-180]="isDropdownOpen()"></i>
+                    </button>
+
+                    @if (isDropdownOpen()) {
+                    <div
+                        class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-md py-1.5 z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 mb-1">
+                            <p class="text-xs font-semibold text-slate-800 truncate">{{ currentUser()?.name ||
+                                'Administrator' }}</p>
+                            <p class="text-[10px] text-slate-500 truncate">{{ currentUser()?.email ||
+                                'admin@guardhelper.com' }}</p>
+                        </div>
+                        <a routerLink="/settings/account" (click)="isDropdownOpen.set(false)"
+                            class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-user-gear text-slate-400"></i>
+                            <span>Account Settings</span>
+                        </a>
+                        <div class="border-t border-slate-100 my-1"></div>
+                        <button type="button" (click)="logout()"
+                            class="w-full text-left px-4 py-2 text-xs text-red-650 hover:bg-red-50 transition cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto bg-slate-50">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>
