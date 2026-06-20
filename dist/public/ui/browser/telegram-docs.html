@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Integration Guide - Guard Helper</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #334155;
+            --code-bg: #0b0f19;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            border-b: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            color: #38bdf8; /* Telegram blue */
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--code-bg);
+            color: #f472b6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        .alert {
+            border-left: 4px solid;
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .alert-info {
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+
+        .alert-warning {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .alert-danger {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .alert-success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .alert p {
+            color: var(--text-primary);
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .alert span {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            font-weight: 400;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-post {
+            background-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-icon">
+                <i class="fa-brands fa-telegram"></i>
+            </div>
+            <h1>Telegram Integration Documentation</h1>
+            <p class="subtitle">Complete guide to configuring webhooks, alerts, and remote access generation.</p>
+        </header>
+
+        <main>
+            <h2><i class="fa-solid fa-circle-info"></i> 1. Introduction</h2>
+            <p>
+                Guard Helper features a robust, secure Telegram Integration module. This allows system administrators to monitor security events, receive critical alerts, and programmatically generate token-based invitation links directly inside a restricted Telegram Chat or Channel.
+            </p>
+
+            <h2><i class="fa-solid fa-robot"></i> 2. Telegram Bot Commands</h2>
+            <p>
+                Once configured and registered, the Telegram Bot listens for text commands in the authorized chat room. The following commands are supported:
+            </p>
+            <ul>
+                <li>
+                    <code>/start</code> or <code>/help</code><br>
+                    <span>Returns the welcome screen detailing all available bot commands and their usage syntax.</span>
+                </li>
+                <li>
+                    <code>/generate &lt;email&gt; &lt;platform&gt; [limit]</code><br>
+                    <span>Generates a new token-based Access Grant. If the platform exists and the email is valid, the bot sends back a secure, clickable access link. <em>Default limit is 20 if omitted.</em></span>
+                </li>
+                <li>
+                    <code>/token &lt;email&gt; &lt;platform&gt; [limit]</code><br>
+                    <span>Alias for the <code>/generate</code> command.</span>
+                </li>
+            </ul>
+            <p><strong>Example command usage:</strong></p>
+            <pre><code>/generate user@domain.com Steam 15</code></pre>
+            <p><strong>Expected response:</strong></p>
+            <pre><code>✅ Access Token Generated
+
+📧 Email: user@domain.com
+🎮 Platform: Steam
+🔢 Usage Limit: 15 times
+
+🔗 Access Link:
+https://yoursite.com/grab-code?token=gh_tok_abcd12345...</code></pre>
+
+            <h2><i class="fa-solid fa-plug"></i> 3. Webhook Integration</h2>
+            <p>
+                Telegram Webhook allows your application to receive message payloads from Telegram instantly. When a user sends a command to your Bot, Telegram dispatches an HTTP POST request to your webhook endpoint.
+            </p>
+            <div class="alert alert-info">
+                <p><span class="badge badge-post">POST</span> Endpoint Route</p>
+                <span><code>{APP_URL}/api/webhook/telegram/message</code></span>
+            </div>
+
+            <h3>Security & Access Control</h3>
+            <p>
+                To prevent unauthorized users from querying codes or generating invitations, the system performs strict validation checks on incoming webhook payloads:
+            </p>
+            <ol>
+                <li><strong>Chat ID Authorization</strong>: The webhook compares the sender's <code>chat.id</code> with the <code>telegram_chat_id</code> saved in settings. If they do not match, the request is rejected with a warning log, and the sender receives an "Access Denied" reply.</li>
+                <li><strong>Token Configuration</strong>: Webhook messages are ignored if the system's <code>telegram_bot_token</code> is not properly set.</li>
+            </ol>
+
+            <h2><i class="fa-solid fa-toggle-on"></i> 4. Managing Webhook Registration</h2>
+            <p>
+                In the <strong>System Settings</strong> panel, you can register or unregister your webhook endpoint directly with Telegram using the single-button toggler.
+            </p>
+            <ul>
+                <li><strong>Register Webhook</strong>: Sends a registration call to Telegram using your configured <code>telegram_bot_token</code> and your site's <code>APP_URL</code>.</li>
+                <li><strong>Unregister Webhook</strong>: Removes the callback URL registration from Telegram, turning off active bot commands.</li>
+            </ul>
+
+            <div class="alert alert-warning">
+                <p>⚠️ Localhost Environments Blocked</p>
+                <span>
+                    Telegram's setWebhook API strictly requires a publicly accessible, secure <strong>HTTPS URL</strong>. If your server is running on <code>localhost</code> or <code>127.0.0.1</code>, webhook registration is automatically disabled.
+                </span>
+            </div>
+
+            <div class="alert alert-success">
+                <p>💡 Tip: Local Testing with Ngrok</p>
+                <span>
+                    To test Telegram commands locally, start a secure tunnel using ngrok:
+                    <br><code>ngrok http 8000</code><br>
+                    Then, copy the generated HTTPS URL (e.g., <code>https://abcde.ngrok-free.app</code>), update your <code>APP_URL</code> in your Laravel <code>.env</code> file, and save settings. The webhook toggler will now allow activation.
+                </span>
+            </div>
+
+            <h2><i class="fa-solid fa-bell"></i> 5. Notification & Alert System</h2>
+            <p>
+                When the Telegram module is active (and <code>telegram_enabled</code> is toggled on in settings), Guard Helper sends real-time alert messages to the authorized chat room for critical background events:
+            </p>
+            <ul>
+                <li><strong>IMAP Connection Failures</strong>: Alerts you immediately if the system cannot connect to a custom IMAP mail server.</li>
+                <li><strong>Gmail/Outlook OAuth Expirations</strong>: Warns you if an authentication token is revoked or expired.</li>
+                <li><strong>Security Interception Failures</strong>: Notifies you if an unauthorized user attempts to grab a code for a platform they are not assigned to.</li>
+            </ul>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Guard Helper. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
