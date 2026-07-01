@@ -110,4 +110,55 @@ class TelegramBotTest extends TestCase
                 && str_contains($request['text'], 'Settings Dashboard');
         });
     }
+
+    public function test_bulk_generation_flow_is_handled(): void
+    {
+        $bundle = \App\Models\AccountBundle::create([
+            'name' => 'Test Bundle',
+            'email' => 'bundle@test.com',
+            'platform' => 'Steam',
+            'password' => 'secret123',
+            'is_active' => true
+        ]);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_bulk_1',
+                'data' => "bulk_bu:{$bundle->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 201
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.telegram.org/bot123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ/editMessageText'
+                && $request['message_id'] === 201
+                && str_contains($request['text'], 'quantity to generate');
+        });
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_bulk_2',
+                'data' => "bulk_li:{$bundle->id}:5:1d:unlim",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 202
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.telegram.org/bot123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ/editMessageText'
+                && $request['message_id'] === 202
+                && str_contains($request['text'], 'Bulk Access Tokens Generated');
+        });
+
+        $this->assertEquals(5, \App\Models\AccessGrant::where('account_bundle_id', $bundle->id)->count());
+    }
 }

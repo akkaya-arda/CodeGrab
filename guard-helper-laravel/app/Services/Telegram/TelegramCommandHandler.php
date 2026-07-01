@@ -44,9 +44,10 @@ class TelegramCommandHandler
             'inline_keyboard' => [
                 [
                     ['text' => '🔑 Generate Token', 'callback_data' => 'menu:generate'],
-                    ['text' => '📩 Fetch OTP Code', 'callback_data' => 'menu:fetch']
+                    ['text' => '📦 Bulk Generate', 'callback_data' => 'menu:bulk']
                 ],
                 [
+                    ['text' => '📩 Fetch OTP Code', 'callback_data' => 'menu:fetch'],
                     ['text' => '🎟 Active Access Grants', 'callback_data' => 'menu:active']
                 ],
                 [

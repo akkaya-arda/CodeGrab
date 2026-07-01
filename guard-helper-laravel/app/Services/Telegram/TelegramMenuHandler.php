@@ -31,6 +31,8 @@ class TelegramMenuHandler
                 $this->showHome($chatId, $messageId);
             } elseif ($page === 'generate') {
                 $this->showGenerateEmails($chatId, $messageId);
+            } elseif ($page === 'bulk') {
+                $this->showBulkBundles($chatId, $messageId);
             } elseif ($page === 'fetch') {
                 $this->showFetchEmails($chatId, $messageId);
             } elseif ($page === 'active') {
@@ -70,6 +72,36 @@ class TelegramMenuHandler
             $expiry = $parts[3];
             $limit = $parts[4];
             $this->executeGenerateToken($chatId, $messageId, $emailKey, $platformId, $expiry, $limit);
+            return;
+        }
+
+        if ($action === 'bulk_bu') {
+            $bundleId = $parts[1];
+            $this->showBulkQuantities($chatId, $messageId, $bundleId);
+            return;
+        }
+
+        if ($action === 'bulk_qt') {
+            $bundleId = $parts[1];
+            $quantity = $parts[2];
+            $this->showBulkExpirations($chatId, $messageId, $bundleId, $quantity);
+            return;
+        }
+
+        if ($action === 'bulk_ex') {
+            $bundleId = $parts[1];
+            $quantity = $parts[2];
+            $expiry = $parts[3];
+            $this->showBulkLimits($chatId, $messageId, $bundleId, $quantity, $expiry);
+            return;
+        }
+
+        if ($action === 'bulk_li') {
+            $bundleId = $parts[1];
+            $quantity = $parts[2];
+            $expiry = $parts[3];
+            $limit = $parts[4];
+            $this->executeBulkGenerate($chatId, $messageId, $bundleId, $quantity, $expiry, $limit);
             return;
         }
 
@@ -587,5 +619,150 @@ class TelegramMenuHandler
             'title' => "Interception Failed: {$platform}",
             'message' => "Failed to fetch guard code for {$email} on {$platform}: {$message}"
         ]);
+    }
+
+    private function showBulkBundles(string $chatId, int $messageId): void
+    {
+        $bundles = \App\Models\AccountBundle::where('is_active', true)->get();
+        if ($bundles->isEmpty()) {
+            $this->showEmptyWarning($chatId, $messageId, "No active Account Bundles configured. Create one in the Admin panel first.");
+            return;
+        }
+
+        $text = "📦 <b>Bulk Generate - Step 1:</b> Select Account Bundle:";
+        $keyboard = ['inline_keyboard' => []];
+
+        foreach ($bundles as $bundle) {
+            $keyboard['inline_keyboard'][] = [
+                ['text' => "📦 {$bundle->name} ({$bundle->platform})", 'callback_data' => "bulk_bu:{$bundle->id}"]
+            ];
+        }
+
+        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showBulkQuantities(string $chatId, int $messageId, string $bundleId): void
+    {
+        $text = "📦 <b>Bulk Generate - Step 2:</b> Select quantity to generate:";
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '🔢 5 Links', 'callback_data' => "bulk_qt:{$bundleId}:5"],
+                    ['text' => '🔢 10 Links', 'callback_data' => "bulk_qt:{$bundleId}:10"]
+                ],
+                [
+                    ['text' => '🔢 25 Links', 'callback_data' => "bulk_qt:{$bundleId}:25"],
+                    ['text' => '🔢 50 Links', 'callback_data' => "bulk_qt:{$bundleId}:50"]
+                ],
+                [
+                    ['text' => '🔢 100 Links', 'callback_data' => "bulk_qt:{$bundleId}:100"]
+                ],
+                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showBulkExpirations(string $chatId, int $messageId, string $bundleId, string $quantity): void
+    {
+        $text = "📦 <b>Bulk Generate - Step 3:</b> Select access link lifetime:";
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '⏱ 1 Hour', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:1h"]],
+                [['text' => '📆 1 Day', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:1d"]],
+                [['text' => '📅 7 Days', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:7d"]],
+                [['text' => '♾ Never Expire', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:never"]],
+                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showBulkLimits(string $chatId, int $messageId, string $bundleId, string $quantity, string $expiry): void
+    {
+        $text = "📦 <b>Bulk Generate - Step 4:</b> Select usage limit per link:";
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '1 Use', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:1"]],
+                [['text' => '5 Uses', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:5"]],
+                [['text' => '10 Uses', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:10"]],
+                [['text' => 'Unlimited', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:unlim"]],
+                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function executeBulkGenerate(string $chatId, int $messageId, string $bundleId, string $quantityCode, string $expiry, string $limitCode): void
+    {
+        $bundle = \App\Models\AccountBundle::find($bundleId);
+        if (!$bundle) {
+            $this->showEmptyWarning($chatId, $messageId, "Account bundle not found.");
+            return;
+        }
+
+        $quantity = (int)$quantityCode;
+        if ($quantity < 1 || $quantity > 1000) {
+            $this->showEmptyWarning($chatId, $messageId, "Invalid quantity.");
+            return;
+        }
+
+        $expiresAt = null;
+        if ($expiry === '1h') {
+            $expiresAt = now()->addHour();
+        } elseif ($expiry === '1d') {
+            $expiresAt = now()->addDay();
+        } elseif ($expiry === '7d') {
+            $expiresAt = now()->addDays(7);
+        }
+
+        $limit = null;
+        if ($limitCode !== 'unlim') {
+            $limit = (int)$limitCode;
+        }
+
+        $frontendUrl = Setting::getValue('frontend_url', 'http://localhost:4200');
+        $links = [];
+
+        for ($i = 0; $i < $quantity; $i++) {
+            $grant = AccessGrant::create([
+                'account_bundle_id' => $bundle->id,
+                'token' => AccessGrant::generateToken(),
+                'email' => $bundle->email,
+                'platform' => $bundle->platform,
+                'limit' => $limit,
+                'uses' => 0,
+                'is_active' => true,
+                'expires_at' => $expiresAt
+            ]);
+            $links[] = rtrim($frontendUrl, '/') . '/grab-code?token=' . $grant->token;
+        }
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '🏠 Back to Menu', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        if ($quantity <= 10) {
+            $successMsg = "✅ <b>Bulk Access Tokens Generated</b>\n"
+                        . "📦 <b>Bundle</b>: " . htmlspecialchars($bundle->name) . "\n\n"
+                        . "🔗 <b>Access Links:</b>\n"
+                        . implode("\n", array_map(fn($l) => "<code>{$l}</code>", $links));
+            $this->telegramService->editMessageText($chatId, $messageId, $successMsg, $keyboard);
+        } else {
+            $fileContent = implode("\n", $links);
+            $caption = "✅ <b>Bulk Access Tokens Generated</b>\n"
+                     . "📦 <b>Bundle</b>: " . htmlspecialchars($bundle->name) . "\n"
+                     . "🔢 <b>Quantity</b>: <code>{$quantity}</code> tokens.";
+
+            $this->telegramService->sendDocument($chatId, $fileContent, 'tokens.txt', $caption, $messageId);
+            $this->telegramService->editMessageText($chatId, $messageId, "✅ <b>Bulk Access Tokens Generated</b>\n\nGenerated {$quantity} tokens. Please see the attached text file below.", $keyboard);
+        }
     }
 }
