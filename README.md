@@ -1,64 +1,406 @@
-# CodeGrab - Open Source 2FA & Verification Code Proxy Portal
+# CodeGrab
 
-CodeGrab is a self-hosted, white-label 2FA and verification code extraction portal. It automates the retrieval of login codes from incoming emails (via Gmail, Outlook, or generic IMAP) and safely exposes them on a rate-limited Public Portal. Teammates, managers, or clients can access verification codes instantly without having direct access to the main credentials or primary email mailboxes.
+## Self-hosted 2FA & Verification Code Delegation Portal
 
-This project is specially prepared and shared for the **R10.Net** webmaster community, focusing on solving shared-account bottlenecks, multi-profile management, and multi-agency delegation workflows.
+CodeGrab is a self-hosted verification code management platform designed to solve one of the biggest problems in shared account environments:
 
----
+**How can teams access 2FA verification codes without sharing mailbox credentials?**
 
-## Key Features
+Instead of exposing primary email accounts, CodeGrab connects to mail providers, detects incoming verification emails, extracts security codes automatically, and provides controlled access through temporary, permission-based access links.
 
-- **Automated Heuristic Extraction**: Automatically extracts verification codes from platforms like Steam, Epic Games, Ubisoft, Netflix, Disney+, EA App, Riot Games, and Rockstar Games using regex filtering and heuristic content parsing.
-- **Secure Access Delegation**: Generate rate-limited, expiring token links for specific mailboxes. Teammates can only access the codes they are authorized to view.
-- **Public Portal Access**: Easily toggle global public access for specific accounts (e.g., sharing a Netflix or Disney+ verification code with family or clients).
-- **Telegram Bot Webhooks**: Automatically dispatches notification logs and access details to Telegram channels or private chats.
-- **Shared Hosting Optimized**: Features a low-footprint, automatic in-memory cache system with expired key pruning, reducing resource consumption on limited shared hosting plans.
-- **Production-Ready Installation Wizard**: Includes a simple, classic installation wizard that checks PHP extensions, configures database credentials, auto-generates secure encryption keys, and sets up production variables automatically.
-- **Database Safety Guard**: Detects MAC mismatches on pre-existing database tables and offers a one-click database reset option during installation.
+Built for agencies, teams, shared environments, and anyone managing multiple accounts that require frequent verification.
 
 ---
 
-## Core Scenarios & Usage Workflows
+## Why CodeGrab?
 
-### Scenario A: Team Delegation in Webmaster & Marketing Agencies
-1. **The Administrator** sets up the platform credentials and connects the company's master email address (IMAP or Google/Microsoft OAuth) in the Admin panel.
-2. The Admin generates an invitation token (e.g. valid for 10 code fetches) for a media buyer or developer, assigning them access to specific platforms.
-3. The **Teammate** visits the invitation link (Public Portal). When they attempt to sign in to the platform, the platform sends a 2FA code to the master email.
-4. The teammate fetches the code from the Public Portal in one click. They never see the master email password or other unrelated emails.
+Managing shared accounts often creates security and workflow problems:
 
-### Scenario B: Shared Streaming Account Access (Netflix, Disney+)
-1. The Admin activates the **Public Access Portal** mode and configures IMAP for the shared streaming email account.
-2. The Admin shares the CodeGrab public portal link with the family members or clients.
-3. When a user tries to log in to Netflix on a smart TV and triggers a code, they open the CodeGrab portal, select Netflix, and retrieve the code dynamically.
-4. The system caches the code for 30 seconds to minimize mail server API requests, automatically cleaning up expired cache memory.
+* Sharing email passwords with employees or clients
+* Giving access to unrelated emails inside the mailbox
+* Losing control over who accessed verification codes
+* Manually forwarding 2FA emails repeatedly
+* Managing dozens of accounts across different platforms
 
-### Scenario C: Webhook Integrations (N8N, Make, or custom scripts)
-1. Developers dispatch POST requests containing authorization details to `/api/webhook/generate-access` using the API secret key.
-2. CodeGrab generates the required access token and immediately sends the access link to the configured Telegram bot.
-3. Teammates can query the Telegram bot to grab the code on the go.
+CodeGrab introduces a delegation layer between the mailbox and the user.
 
----
+```
+Email Provider
+(Gmail / Outlook / IMAP)
+        |
+        |
+        v
+   CodeGrab Engine
+        |
+        |
+        +----------------+
+        |                |
+        v                v
+ Admin Panel       Public Access Portal
+        |                |
+        |                |
+        v                v
+ Manage Accounts   Retrieve Authorized Codes
+```
 
-## Installation
-
-1. Upload the project to your server (maintains a public folder layout structure).
-2. Point your web browser to your site's root or `/install` (e.g., `https://yourdomain.com/install`).
-3. Follow the installation wizard steps:
-   - **Step 1**: Enter an existing encryption key or choose auto-generation.
-   - **Step 2**: Provide your database credentials (supports MySQL, PostgreSQL, and SQLite). The wizard validates the connection and checks for existing tables.
-   - **Step 3**: Define system brand names, set up Telegram notifications, and create your Administrator account.
-4. Once completed, the wizard automatically configures `.env` values, sets `APP_DEBUG=false`, sets `APP_ENV=production`, and creates the `storage/installed` configuration lock.
-
----
-
-## Technology Stack
-
-- **Backend**: Laravel 11, PHP >= 8.3
-- **Frontend**: Angular UI, Bootstrap, CSS Signals
-- **Database**: MySQL, PostgreSQL, or SQLite
+Users only receive access to the verification flow they are authorized for.
 
 ---
 
-## License
+# Features
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Automated OTP Extraction Engine
+
+CodeGrab includes a flexible extraction engine capable of identifying verification codes from incoming emails.
+
+Supported extraction methods:
+
+* Custom Regex patterns
+* Heuristic content analysis
+* Keyword proximity scoring
+* Platform-specific extraction rules
+
+Example supported services:
+
+* Steam
+* Epic Games
+* Ubisoft
+* EA App
+* Riot Games
+* Rockstar Games
+* Netflix
+* Disney+
+* Custom user-defined platforms
+
+The extraction engine does not depend on fixed templates. Administrators can define their own rules.
+
+---
+
+# Secure Access Delegation
+
+Generate temporary access grants instead of sharing credentials.
+
+Each access token can define:
+
+* Expiration time
+* Maximum usage count
+* Assigned platform
+* Assigned mailbox
+* Visibility settings
+
+Example:
+
+```
+Steam Account
+        |
+        |
+        v
+Access Grant
+10 uses
+Expires in 24 hours
+        |
+        |
+        v
+Employee / Client
+```
+
+The recipient never needs:
+
+* Mailbox password
+* IMAP credentials
+* OAuth tokens
+* Access to unrelated emails
+
+---
+
+# Supported Mail Providers
+
+## Gmail
+
+OAuth2 authentication.
+
+No mailbox password storage required.
+
+## Outlook / Microsoft
+
+OAuth2 authentication.
+
+Uses delegated access tokens.
+
+## Generic IMAP
+
+Supports custom mail providers:
+
+* cPanel mailboxes
+* Private domains
+* Custom email servers
+
+---
+
+# Public Portal
+
+CodeGrab includes a lightweight public-facing portal where authorized users can retrieve verification codes.
+
+Features:
+
+* Token-based access
+* Rate limiting
+* Expiration control
+* Usage tracking
+* Access logging
+* Optional email hiding
+
+Example workflow:
+
+```
+User opens token link
+
+        ↓
+
+Selects platform
+
+        ↓
+
+CodeGrab checks permissions
+
+        ↓
+
+Fetches latest verification email
+
+        ↓
+
+Extracts OTP code
+
+        ↓
+
+Returns verification code
+```
+
+---
+
+# Telegram Integration
+
+CodeGrab can integrate with Telegram bots for automation workflows.
+
+Supported actions:
+
+* Generate access links
+* Receive system notifications
+* Monitor code retrieval events
+
+Example:
+
+```
+/generate-token steam 24h 5
+```
+
+Automatically creates a controlled access link.
+
+---
+
+# Webhook Automation
+
+CodeGrab provides webhook endpoints for external automation tools.
+
+Compatible with:
+
+* n8n
+* Make
+* Custom scripts
+* Internal dashboards
+
+Example workflow:
+
+```
+Automation Trigger
+
+        ↓
+
+Webhook Request
+
+        ↓
+
+Generate Access Token
+
+        ↓
+
+Send Notification
+
+        ↓
+
+User Retrieves Code
+```
+
+---
+
+# Security Features
+
+## Credential Encryption
+
+Sensitive data is encrypted before database storage.
+
+Protected information includes:
+
+* Platform passwords
+* API tokens
+* Mail credentials
+
+Uses Laravel encryption with application key validation.
+
+---
+
+## Installation Integrity Protection
+
+CodeGrab detects encryption mismatches during installation.
+
+If an existing database was created with another encryption key:
+
+* Decryption integrity is checked
+* Corrupted configuration is detected
+* Optional database reset is provided
+
+---
+
+## Rate Limiting
+
+Protected endpoints include:
+
+* Public code retrieval
+* Authentication endpoints
+* Webhooks
+* Sensitive actions
+
+---
+
+## Shared Hosting Friendly
+
+Designed to run even on limited hosting environments.
+
+Optimizations include:
+
+* Lightweight caching
+* Automatic cache cleanup
+* Reduced background polling
+* No external queue requirement
+
+Compatible with:
+
+* cPanel hosting
+* VPS environments
+* Dedicated servers
+
+---
+
+# Installation
+
+Requirements:
+
+* PHP >= 8.3
+* Laravel compatible hosting
+* MySQL / PostgreSQL / SQLite
+* Required PHP extensions:
+
+  * OpenSSL
+  * PDO
+  * IMAP (for IMAP accounts)
+
+---
+
+Installation steps:
+
+1. Upload CodeGrab to your server
+
+2. Open:
+
+```
+https://your-domain.com/install
+```
+
+3. Complete the installation wizard:
+
+* Environment validation
+* Database configuration
+* Encryption setup
+* Administrator creation
+* Production configuration
+
+After installation:
+
+* APP_DEBUG is disabled
+* Production mode is enabled
+* Installation lock is created
+
+---
+
+# Technology Stack
+
+## Backend
+
+* Laravel
+* PHP 8.3+
+* Laravel Sanctum
+* Eloquent ORM
+
+## Frontend
+
+* Angular
+* Bootstrap
+* Angular Signals
+* Vanilla CSS
+
+## Database
+
+Supported:
+
+* MySQL
+* PostgreSQL
+* SQLite
+
+---
+
+# Project Architecture
+
+CodeGrab follows a modular service-oriented architecture.
+
+Main components:
+
+```
+app/
+ ├── Infrastructure/
+ │    ├── Gmail
+ │    ├── Outlook
+ │    └── IMAP
+ │
+ ├── Services/
+ │    └── CodeExtractor
+ │
+ ├── Models/
+ │
+ ├── Controllers/
+ │
+ └── Notifications/
+      ├── Telegram
+      └── SMTP
+```
+
+---
+
+# Open Source
+
+CodeGrab is released under the MIT License.
+
+You are free to:
+
+* Use
+* Modify
+* Extend
+* Self-host
+* Integrate into your own workflows
+
+---
+
+# Disclaimer
+
+CodeGrab is designed for legitimate account management, team collaboration, and delegated verification workflows.
+
+Users are responsible for ensuring they have authorization to access connected accounts and services.
