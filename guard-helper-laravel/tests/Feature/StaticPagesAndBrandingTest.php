@@ -39,6 +39,8 @@ class StaticPagesAndBrandingTest extends TestCase
                 'theme_font_family' => 'Outfit',
                 'copyright_text' => 'Custom Copyright 2026',
                 'hide_access_restricted_info' => '1',
+                'light_mode' => '1',
+                'public_portal_title' => 'Custom Window Title',
             ]);
 
         $response->assertStatus(200)
@@ -53,6 +55,8 @@ class StaticPagesAndBrandingTest extends TestCase
         $this->assertEquals('Outfit', Setting::getValue('theme_font_family'));
         $this->assertEquals('Custom Copyright 2026', Setting::getValue('copyright_text'));
         $this->assertEquals('1', Setting::getValue('hide_access_restricted_info'));
+        $this->assertEquals('1', Setting::getValue('light_mode'));
+        $this->assertEquals('Custom Window Title', Setting::getValue('public_portal_title'));
     }
 
     public function test_admin_can_crud_static_pages(): void
@@ -157,8 +161,9 @@ class StaticPagesAndBrandingTest extends TestCase
         Setting::setValue('theme_font_family', 'Cinzel');
         Setting::setValue('copyright_text', 'Custom Copyright Info');
         Setting::setValue('hide_access_restricted_info', '1');
+        Setting::setValue('light_mode', '1');
+        Setting::setValue('public_portal_title', 'Cyber Guard Portal Title');
 
-        // Create active token grant
         $grant = AccessGrant::create([
             'email' => 'user@test.com',
             'platform' => 'Steam',
@@ -168,7 +173,6 @@ class StaticPagesAndBrandingTest extends TestCase
             'is_active' => true,
         ]);
 
-        // 1. Tokenless platform settings check
         $response = $this->getJson('/api/public/platforms');
         $response->assertStatus(200)
             ->assertJsonPath('system_name', 'CyberGuard')
@@ -178,9 +182,10 @@ class StaticPagesAndBrandingTest extends TestCase
             ->assertJsonPath('logo_enabled', false)
             ->assertJsonPath('theme_font_family', 'Cinzel')
             ->assertJsonPath('copyright_text', 'Custom Copyright Info')
-            ->assertJsonPath('hide_access_restricted_info', true);
+            ->assertJsonPath('hide_access_restricted_info', true)
+            ->assertJsonPath('light_mode', true)
+            ->assertJsonPath('public_portal_title', 'Cyber Guard Portal Title');
 
-        // 2. Token verification check
         $response = $this->getJson('/api/public/access-grant?token=inv_test_token');
         $response->assertStatus(200)
             ->assertJsonPath('data.system_name', 'CyberGuard')
@@ -190,6 +195,8 @@ class StaticPagesAndBrandingTest extends TestCase
             ->assertJsonPath('data.logo_enabled', false)
             ->assertJsonPath('data.theme_font_family', 'Cinzel')
             ->assertJsonPath('data.copyright_text', 'Custom Copyright Info')
-            ->assertJsonPath('data.hide_access_restricted_info', true);
+            ->assertJsonPath('data.hide_access_restricted_info', true)
+            ->assertJsonPath('data.light_mode', true)
+            ->assertJsonPath('data.public_portal_title', 'Cyber Guard Portal Title');
     }
 }

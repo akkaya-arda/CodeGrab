@@ -91,7 +91,8 @@ export class Settings {
     support_portal_enabled: [false],
     support_mode: ['built_in'],
     support_custom_script: [''],
-    system_name: ['Raven', [Validators.required]],
+    system_name: ['', [Validators.required]],
+    public_portal_title: [''],
     system_logo: [''],
     logo_enabled: [true],
     theme_primary_color: ['#4f46e5'],
@@ -102,17 +103,29 @@ export class Settings {
     copyright_text: [''],
     hide_access_restricted_info: [false],
     email_timeframe_limit: [1200, [Validators.required, Validators.min(1)]],
+    light_mode: [false],
   });
 
   constructor() {
     this.layoutServices.setPageTitle('System Configuration');
     this.loadSettings();
-    this.loadPlatforms();
-    this.loadBundles();
-    this.loadPages();
     this.settingsForm.valueChanges.subscribe(() => {
       this.updatePlayground();
     });
+  }
+
+  protected setActiveSettingsTab(tab: string) {
+    this.activeSettingsTab.set(tab);
+    if (tab === 'pages' && this.staticPages().length === 0) {
+      this.loadPages();
+    } else if (tab === 'playground') {
+      if (this.platforms().length === 0) {
+        this.loadPlatforms();
+      }
+      if (this.accountBundles().length === 0) {
+        this.loadBundles();
+      }
+    }
   }
 
   private loadSettings() {
@@ -140,7 +153,8 @@ export class Settings {
             support_portal_enabled: data.support_portal_enabled === '1',
             support_mode: data.support_mode || 'built_in',
             support_custom_script: data.support_custom_script || '',
-            system_name: data.system_name || 'Raven',
+            system_name: data.system_name || '',
+            public_portal_title: data.public_portal_title || '',
             system_logo: data.system_logo || '',
             logo_enabled: data.logo_enabled === '1',
             theme_primary_color: data.theme_primary_color || '#4f46e5',
@@ -151,7 +165,9 @@ export class Settings {
             copyright_text: data.copyright_text || '',
             hide_access_restricted_info: data.hide_access_restricted_info === '1',
             email_timeframe_limit: data.email_timeframe_limit ? parseInt(data.email_timeframe_limit) : 1200,
+            light_mode: data.light_mode === '1',
           });
+          this.themeService.lightMode.set(data.light_mode === '1');
           this.updatePlayground();
         }
       },
@@ -178,6 +194,7 @@ export class Settings {
     formValues.support_portal_enabled = formValues.support_portal_enabled ? '1' : '0';
     formValues.logo_enabled = formValues.logo_enabled ? '1' : '0';
     formValues.hide_access_restricted_info = formValues.hide_access_restricted_info ? '1' : '0';
+    formValues.light_mode = formValues.light_mode ? '1' : '0';
 
     this.settingsService.updateSettings(formValues).subscribe({
       next: response => {
@@ -197,7 +214,9 @@ export class Settings {
           formValues.logo_enabled === '1',
           formValues.theme_font_family,
           formValues.copyright_text,
-          formValues.hide_access_restricted_info === '1'
+          formValues.hide_access_restricted_info === '1',
+          formValues.light_mode === '1',
+          formValues.public_portal_title
         );
       },
       error: err => {

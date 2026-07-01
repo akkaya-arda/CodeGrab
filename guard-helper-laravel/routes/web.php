@@ -8,7 +8,8 @@ Route::get('/', function () {
     if (!file_exists(storage_path('installed'))) {
         return redirect('/install');
     }
-    return view()->exists('app') ? view('app') : view('welcome');
+
+    return redirect('/grab-code');
 });
 
 Route::get('/install', [InstallController::class, 'index']);

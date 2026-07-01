@@ -7,7 +7,7 @@ import { ApiConnectionSettings } from '../settings/api-connection-settings';
 export class ThemeService {
   private apiSettings = inject(ApiConnectionSettings);
 
-  public systemName = signal<string>('Raven');
+  public systemName = signal<string>('');
   public systemLogo = signal<string>('');
   public logoEnabled = signal<boolean>(true);
   public primaryColor = signal<string>('#4f46e5');
@@ -17,34 +17,40 @@ export class ThemeService {
   public systemFontFamily = signal<string>('Pacifico');
   public copyrightText = signal<string>('');
   public hideAccessRestrictedInfo = signal<boolean>(false);
+  public lightMode = signal<boolean>(false);
+  public publicPortalTitle = signal<string>('');
+  public apiCacheDuration = 30000;
+  public platformsCacheDuration = 900000;
 
   public getLogoUrl(): string {
     const logo = this.systemLogo();
     if (!logo) return '';
     if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
-    
+
     let base = this.apiSettings.baseUrl;
     if (base.endsWith('/api')) {
       base = base.substring(0, base.length - 4);
     }
-    
+
     const separator = (base.endsWith('/') || logo.startsWith('/')) ? '' : '/';
     return base + separator + logo;
   }
 
   public applyBranding(
-    name: string, 
-    logo: string, 
-    primary: string, 
-    accent: string, 
-    sloganTitle?: string, 
+    name: string,
+    logo: string,
+    primary: string,
+    accent: string,
+    sloganTitle?: string,
     sloganSubtitle?: string,
     logoEnabled?: boolean,
     fontFamily?: string,
     copyrightText?: string,
-    hideAccessRestrictedInfo?: boolean
+    hideAccessRestrictedInfo?: boolean,
+    lightMode?: boolean,
+    publicPortalTitle?: string
   ) {
-    this.systemName.set(name || 'Raven');
+    this.systemName.set(name || '');
     this.systemLogo.set(logo || '');
     this.logoEnabled.set(logoEnabled !== undefined ? logoEnabled : true);
     this.primaryColor.set(primary || '#4f46e5');
@@ -54,6 +60,8 @@ export class ThemeService {
     this.systemFontFamily.set(fontFamily || 'Pacifico');
     this.copyrightText.set(copyrightText || '');
     this.hideAccessRestrictedInfo.set(hideAccessRestrictedInfo || false);
+    this.lightMode.set(lightMode || false);
+    this.publicPortalTitle.set(publicPortalTitle || '');
 
     this.loadGoogleFont(fontFamily || 'Pacifico');
     this.injectDynamicStyles(primary || '#4f46e5', accent || '#6366f1', fontFamily || 'Pacifico');

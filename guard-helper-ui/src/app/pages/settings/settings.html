@@ -4,37 +4,38 @@
   <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs shrink-0">
     <div>
       <h1 class="text-xl font-bold text-slate-800 tracking-wide">System Settings</h1>
-      <p class="text-slate-500 text-xs mt-1">Configure branding variables, system notifications, support features, and static pages.</p>
+      <p class="text-slate-500 text-xs mt-1">Configure branding variables, system notifications, support features, and
+        static pages.</p>
     </div>
   </div>
 
   <!-- Navigation Tabs -->
   <div class="flex border-b border-slate-200 bg-white p-3 rounded-2xl border shadow-xs gap-2 shrink-0 overflow-x-auto">
-    <button type="button" (click)="activeSettingsTab.set('branding')"
+    <button type="button" (click)="setActiveSettingsTab('branding')"
       class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
       [class.bg-indigo-50]="activeSettingsTab() === 'branding'" [class.text-indigo-600]="activeSettingsTab() === 'branding'"
       [class.bg-transparent]="activeSettingsTab() !== 'branding'" [class.text-slate-400]="activeSettingsTab() !== 'branding'">
       <i class="fa-solid fa-palette"></i> Branding & General
     </button>
-    <button type="button" (click)="activeSettingsTab.set('notifications')"
+    <button type="button" (click)="setActiveSettingsTab('notifications')"
       class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
       [class.bg-indigo-50]="activeSettingsTab() === 'notifications'" [class.text-indigo-600]="activeSettingsTab() === 'notifications'"
       [class.bg-transparent]="activeSettingsTab() !== 'notifications'" [class.text-slate-400]="activeSettingsTab() !== 'notifications'">
       <i class="fa-solid fa-bell"></i> SMTP & Telegram
     </button>
-    <button type="button" (click)="activeSettingsTab.set('support')"
+    <button type="button" (click)="setActiveSettingsTab('support')"
       class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
       [class.bg-indigo-50]="activeSettingsTab() === 'support'" [class.text-indigo-600]="activeSettingsTab() === 'support'"
       [class.bg-transparent]="activeSettingsTab() !== 'support'" [class.text-slate-400]="activeSettingsTab() !== 'support'">
       <i class="fa-solid weights fa-comments"></i> Portal Support
     </button>
-    <button type="button" (click)="activeSettingsTab.set('pages')"
+    <button type="button" (click)="setActiveSettingsTab('pages')"
       class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
       [class.bg-indigo-50]="activeSettingsTab() === 'pages'" [class.text-indigo-600]="activeSettingsTab() === 'pages'"
       [class.bg-transparent]="activeSettingsTab() !== 'pages'" [class.text-slate-400]="activeSettingsTab() !== 'pages'">
       <i class="fa-solid fa-file-lines"></i> Custom Pages
     </button>
-    <button type="button" (click)="activeSettingsTab.set('playground')"
+    <button type="button" (click)="setActiveSettingsTab('playground')"
       class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer outline-none flex items-center gap-2 whitespace-nowrap"
       [class.bg-indigo-50]="activeSettingsTab() === 'playground'" [class.text-indigo-600]="activeSettingsTab() === 'playground'"
       [class.bg-transparent]="activeSettingsTab() !== 'playground'" [class.text-slate-400]="activeSettingsTab() !== 'playground'">
@@ -48,24 +49,26 @@
     <!-- 1. BRANDING & GENERAL TAB -->
     @if (activeSettingsTab() === 'branding') {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-      
+
       <!-- Logo & Accent Colors Panel -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between h-full">
         <div>
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <h2
+            class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
             <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> Theme & Identity
           </h2>
-          
+
           <div class="space-y-5">
             <!-- Logo Upload -->
             <div>
               <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">SYSTEM BRAND LOGO</label>
               <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div class="w-14 h-14 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                <div
+                  class="w-14 h-14 bg-white border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                   @if (settingsForm.get('system_logo')?.value) {
-                    <img [src]="themeService.getLogoUrl()" class="w-full h-full object-contain" alt="Branding Logo" />
+                  <img [src]="themeService.getLogoUrl()" class="w-full h-full object-contain" alt="Branding Logo" />
                   } @else {
-                    <i class="fa-solid fa-image text-slate-350 text-xl"></i>
+                  <i class="fa-solid fa-image text-slate-350 text-xl"></i>
                   }
                 </div>
                 <div class="space-y-1.5">
@@ -89,7 +92,9 @@
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" formControlName="logo_enabled" class="sr-only peer" />
-                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-650"></div>
+                <div
+                  class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-650">
+                </div>
               </label>
             </div>
 
@@ -98,23 +103,28 @@
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">PRIMARY COLOR</label>
                 <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
-                  <input type="color" formControlName="theme_primary_color" class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
-                  <span class="text-xs font-mono font-bold text-slate-700">{{ settingsForm.get('theme_primary_color')?.value }}</span>
+                  <input type="color" formControlName="theme_primary_color"
+                    class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
+                  <span class="text-xs font-mono font-bold text-slate-700">{{
+                    settingsForm.get('theme_primary_color')?.value }}</span>
                 </div>
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">ACCENT COLOR</label>
                 <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
-                  <input type="color" formControlName="theme_accent_color" class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
-                  <span class="text-xs font-mono font-bold text-slate-700">{{ settingsForm.get('theme_accent_color')?.value }}</span>
+                  <input type="color" formControlName="theme_accent_color"
+                    class="w-7 h-7 border-0 bg-transparent cursor-pointer rounded" />
+                  <span class="text-xs font-mono font-bold text-slate-700">{{
+                    settingsForm.get('theme_accent_color')?.value }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Font Selection -->
             <div>
-              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">BRAND NAME FONT FAMILY</label>
-              <select formControlName="theme_font_family" 
+              <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">BRAND NAME FONT
+                FAMILY</label>
+              <select formControlName="theme_font_family"
                 class="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition">
                 <option value="Pacifico">Pacifico (Default / Script)</option>
                 <option value="Inter">Inter (Clean / Sans-serif)</option>
@@ -125,7 +135,8 @@
                 <option value="Bebas Neue">Bebas Neue (Bold Display)</option>
                 <option value="Cinzel">Cinzel (Classical Serif)</option>
               </select>
-              <p class="text-[9px] text-slate-450 mt-1">Changes the typography typeface style of the brand text name across layouts.</p>
+              <p class="text-[9px] text-slate-450 mt-1">Changes the typography typeface style of the brand text name
+                across layouts.</p>
             </div>
           </div>
         </div>
@@ -141,15 +152,24 @@
 
       <!-- General & Access settings panel -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-5 h-full">
-        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
+        <h2
+          class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
           <i class="fa-solid fa-sliders text-indigo-600"></i> General & Access Variables
         </h2>
 
         <div>
           <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">SYSTEM / BRAND NAME</label>
-          <input type="text" formControlName="system_name" placeholder="e.g. Raven Guard"
-            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition" />
-          <p class="text-[9px] text-slate-450 mt-1">Changes the title displayed in the Admin Dashboard sidebar and Public Portal header.</p>
+          <input type="text" formControlName="system_name" placeholder="Name"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Changes the title displayed in the Admin Dashboard sidebar and
+            Public Portal header.</p>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PUBLIC PORTAL WINDOW TITLE</label>
+          <input type="text" formControlName="public_portal_title" placeholder="Public Portal Title"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
+          <p class="text-[9px] text-slate-450 mt-1">Customizes the browser window title of the Public Portal. (Defaults to the Brand Name above)</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -157,22 +177,29 @@
             <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PORTAL SLOGAN TITLE</label>
             <input type="text" formControlName="system_slogan_title" placeholder="e.g. Access Portal"
               class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition" />
-            <p class="text-[9px] text-slate-450 mt-1">Main heading title displayed inside the Public Portal verification card.</p>
+            <p class="text-[9px] text-slate-450 mt-1">Main heading title displayed inside the Public Portal verification
+              card.</p>
           </div>
 
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PORTAL SLOGAN SUBTITLE</label>
-            <input type="text" formControlName="system_slogan_subtitle" placeholder="e.g. Retrieve your 2FA codes easily."
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PORTAL SLOGAN
+              SUBTITLE</label>
+            <input type="text" formControlName="system_slogan_subtitle"
+              placeholder="e.g. Retrieve your 2FA codes easily."
               class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
-            <p class="text-[9px] text-slate-450 mt-1">Short subtitle slogan shown directly below the portal main heading.</p>
+            <p class="text-[9px] text-slate-450 mt-1">Short subtitle slogan shown directly below the portal main
+              heading.</p>
           </div>
         </div>
 
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PUBLIC PORTAL COPYRIGHT TEXT</label>
-          <input type="text" formControlName="copyright_text" placeholder="e.g. &copy; 2026 Raven Guard. All rights reserved. (Leave empty for dynamic default)"
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">PUBLIC PORTAL COPYRIGHT
+            TEXT</label>
+          <input type="text" formControlName="copyright_text"
+            placeholder="e.g. &copy; 2026. All rights reserved. (Leave empty for dynamic default)"
             class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
-          <p class="text-[9px] text-slate-450 mt-1">Customizes the copyright disclaimer at the bottom of the Public Access portal page. Supports HTML entities (like &amp;copy;).</p>
+          <p class="text-[9px] text-slate-450 mt-1">Customizes the copyright disclaimer at the bottom of the Public
+            Access portal page. Supports HTML entities (like &amp;copy;).</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,11 +207,13 @@
             <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">FRONTEND BASE URL</label>
             <input type="text" formControlName="frontend_url" placeholder="http://localhost:4200"
               class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
-            <p class="text-[9px] text-slate-450 mt-1">Used to generate complete token-based access links in Telegram and API responses.</p>
+            <p class="text-[9px] text-slate-450 mt-1">Used to generate complete token-based access links in Telegram and
+              API responses.</p>
           </div>
 
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">API SIGNATURE / SECRET KEY</label>
+            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">API SIGNATURE / SECRET
+              KEY</label>
             <div class="relative flex items-center">
               <input type="text" formControlName="webhook_secret_key" placeholder="Generate secret key"
                 class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 pr-10 transition" />
@@ -193,21 +222,25 @@
                 <i class="fa-solid fa-arrows-rotate"></i>
               </button>
             </div>
-            <p class="text-[9px] text-slate-450 mt-1">Key for N8N dispatches. Pass as HMAC signature or static token header.</p>
+            <p class="text-[9px] text-slate-450 mt-1">Key for N8N dispatches. Pass as HMAC signature or static token
+              header.</p>
           </div>
         </div>
 
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">E-MAIL TIMEFRAME LIMIT (SECONDS)</label>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">E-MAIL TIMEFRAME LIMIT
+            (SECONDS)</label>
           <input type="number" formControlName="email_timeframe_limit" placeholder="e.g. 1200"
             class="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-xs text-slate-808 outline-none focus:border-indigo-600 transition" />
-          <p class="text-[9px] text-slate-450 mt-1">Defines the maximum age (in seconds) allowed for intercepted guard code emails. Emails older than this will be rejected as outdated. Default: 1200 seconds (20 minutes).</p>
+          <p class="text-[9px] text-slate-450 mt-1">Defines the maximum age (in seconds) allowed for intercepted guard
+            code emails. Emails older than this will be rejected as outdated. Default: 1200 seconds (20 minutes).</p>
         </div>
 
         <div class="border-t border-slate-100 pt-5 flex items-center justify-between">
           <div class="space-y-0.5">
             <span class="block text-xs font-semibold text-slate-700">Open Public Access Portal</span>
-            <span class="block text-[9px] text-slate-450">Allow tokenless guard fetching via registered email search.</span>
+            <span class="block text-[9px] text-slate-450">Allow tokenless guard fetching via registered email
+              search.</span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer select-none">
             <input type="checkbox" formControlName="public_access_portal_enabled" class="sr-only peer" />
@@ -220,10 +253,26 @@
         <div class="border-t border-slate-100 pt-5 flex items-center justify-between">
           <div class="space-y-0.5">
             <span class="block text-xs font-semibold text-slate-700">Hide Access Restricted Warning</span>
-            <span class="block text-[9px] text-slate-450">Hide warning message and lock icon on public portal when access is restricted.</span>
+            <span class="block text-[9px] text-slate-450">Hide warning message and lock icon on public portal when
+              access is restricted.</span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer select-none">
             <input type="checkbox" formControlName="hide_access_restricted_info" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+            </div>
+          </label>
+        </div>
+
+        <div class="border-t border-slate-100 pt-5 flex items-center justify-between">
+          <div class="space-y-0.5">
+            <span class="block text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-leaf text-emerald-600"></i> Light Mode (Shared Hosting Friendly)
+            </span>
+            <span class="block text-[9px] text-slate-450">Reduces server load by caching API requests and decreasing background polling frequencies.</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer select-none">
+            <input type="checkbox" formControlName="light_mode" class="sr-only peer" />
             <div
               class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
             </div>
@@ -289,7 +338,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">RECIPIENT (TO) EMAIL</label>
+                <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">RECIPIENT (TO)
+                  EMAIL</label>
                 <input type="email" formControlName="smtp_to_address" placeholder="recipient@domain.com"
                   class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
               </div>
@@ -303,7 +353,7 @@
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">FROM NAME</label>
-                <input type="text" formControlName="smtp_from_name" placeholder="Raven System"
+                <input type="text" formControlName="smtp_from_name" placeholder="System"
                   class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-indigo-600" />
               </div>
             </div>
@@ -358,18 +408,21 @@
             <div class="border-t border-slate-100 pt-3.5" [class.opacity-50]="isTogglingWebhook()">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-0.5">TELEGRAM WEBHOOK</label>
+                  <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-0.5">TELEGRAM
+                    WEBHOOK</label>
                   <p class="text-[9px] text-slate-450 leading-tight">Sync and manage commands automatically.</p>
                 </div>
                 <div class="flex items-center">
                   @if (isLocalhost()) {
-                    <span class="text-[9px] bg-red-50 text-red-600 border border-red-100 rounded px-1.5 py-0.5 font-semibold me-2">Localhost Blocked</span>
+                  <span
+                    class="text-[9px] bg-red-50 text-red-600 border border-red-100 rounded px-1.5 py-0.5 font-semibold me-2">Localhost
+                    Blocked</span>
                   }
                   <label class="relative inline-flex items-center cursor-pointer select-none">
-                    <input type="checkbox" formControlName="telegram_webhook_active" 
-                           (change)="onToggleTelegramWebhook($event)"
-                           [disabled]="isLocalhost() || isTogglingWebhook() || !settingsForm.get('telegram_enabled')?.value"
-                           class="sr-only peer" />
+                    <input type="checkbox" formControlName="telegram_webhook_active"
+                      (change)="onToggleTelegramWebhook($event)"
+                      [disabled]="isLocalhost() || isTogglingWebhook() || !settingsForm.get('telegram_enabled')?.value"
+                      class="sr-only peer" />
                     <div
                       class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600">
                     </div>
@@ -380,13 +433,15 @@
           </div>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-4 text-[10px] text-slate-650 flex flex-col gap-1.5">
+        <div
+          class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-4 text-[10px] text-slate-650 flex flex-col gap-1.5">
           <div class="leading-relaxed">
             <i class="fa-solid fa-info-circle text-sky-600 me-1"></i> Start (`/start`) the bot before using commands.
           </div>
           <div class="border-t border-slate-200 pt-1.5 flex justify-between items-center">
             <span class="text-[9px] text-slate-450">Bot documentation</span>
-            <a href="/telegram-docs.html" target="_blank" class="text-sky-600 hover:text-sky-700 font-bold flex items-center gap-1">
+            <a href="/telegram-docs.html" target="_blank"
+              class="text-sky-600 hover:text-sky-700 font-bold flex items-center gap-1">
               <i class="fa-solid fa-book"></i> Read Docs
             </a>
           </div>
@@ -423,14 +478,17 @@
 
           @if (settingsForm.get('support_mode')?.value === 'custom_script') {
           <div class="md:col-span-2">
-            <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-1.5">CUSTOM EMBED SCRIPT CODE</label>
+            <label class="block text-[10px] font-bold text-slate-550 tracking-wider mb-1.5">CUSTOM EMBED SCRIPT
+              CODE</label>
             <textarea formControlName="support_custom_script"
               placeholder="<!-- Paste your live chat script here, e.g. Crisp, Tawk.to, etc. -->"
               class="w-full h-28 bg-white border border-slate-300 rounded-lg px-3 py-1.5 font-mono text-xs text-slate-808 outline-none focus:border-indigo-600 resize-none"></textarea>
-            <p class="text-[9px] text-slate-500 mt-1">This HTML/JS block will inject dynamically on the guest portal.</p>
+            <p class="text-[9px] text-slate-500 mt-1">This HTML/JS block will inject dynamically on the guest portal.
+            </p>
           </div>
           } @else {
-          <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-[10px] text-slate-650 leading-relaxed">
+          <div
+            class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-[10px] text-slate-650 leading-relaxed">
             <p class="font-bold text-indigo-700 mb-1 flex items-center gap-1 text-xs">
               <i class="fa-solid fa-circle-info"></i> Built-in Live Chat Features
             </p>
@@ -447,7 +505,8 @@
     }
 
     <!-- SUBMIT ACTIONS BAR FOR FORM TABS -->
-    @if (activeSettingsTab() === 'branding' || activeSettingsTab() === 'notifications' || activeSettingsTab() === 'support') {
+    @if (activeSettingsTab() === 'branding' || activeSettingsTab() === 'notifications' || activeSettingsTab() ===
+    'support') {
     <div class="flex justify-end pt-4 animate-fadeIn">
       <button type="submit" [disabled]="isSaving() || settingsForm.invalid"
         class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-sm border border-indigo-750">
@@ -465,7 +524,8 @@
     <div class="flex justify-between items-center border-b border-slate-200 pb-4">
       <div>
         <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Static Content Pages</h2>
-        <p class="text-[10px] text-slate-450 mt-1">Manage secondary static links (e.g. Terms, Privacy Policy) shown in the portal footer.</p>
+        <p class="text-[10px] text-slate-450 mt-1">Manage secondary static links (e.g. Terms, Privacy Policy) shown in
+          the portal footer.</p>
       </div>
       <button type="button" (click)="openAddPageModal()"
         class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-xs border border-indigo-750">
@@ -478,7 +538,8 @@
     <div class="overflow-x-auto rounded-xl border border-slate-200">
       <table class="w-full text-left text-xs border-collapse">
         <thead>
-          <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <tr
+            class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             <th class="p-4">Title</th>
             <th class="p-4">Slug</th>
             <th class="p-4">Published</th>
@@ -490,16 +551,21 @@
           @for (page of staticPages(); track page.id) {
           <tr class="hover:bg-slate-50/50 transition">
             <td class="p-4 font-bold text-slate-700">{{ page.title }}</td>
-            <td class="p-4 font-mono text-[10px] text-indigo-600 bg-indigo-50/30 px-2 py-0.5 rounded border border-indigo-100/30 inline-block mt-3.5">{{ page.slug }}</td>
+            <td
+              class="p-4 font-mono text-[10px] text-indigo-600 bg-indigo-50/30 px-2 py-0.5 rounded border border-indigo-100/30 inline-block mt-3.5">
+              {{ page.slug }}</td>
             <td class="p-4">
               @if (page.is_published) {
-                <span class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Published</span>
+              <span
+                class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Published</span>
               } @else {
-                <span class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-slate-100 text-slate-500 border border-slate-200">Draft</span>
+              <span
+                class="px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider bg-slate-100 text-slate-500 border border-slate-200">Draft</span>
               }
             </td>
             <td class="p-4 text-slate-500">
-              <i class="fa-solid text-sm" [ngClass]="page.show_in_footer ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-300'"></i>
+              <i class="fa-solid text-sm"
+                [ngClass]="page.show_in_footer ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-300'"></i>
             </td>
             <td class="p-4 text-right">
               <div class="flex justify-end gap-2">
@@ -542,7 +608,8 @@
     </div>
 
     <p class="text-slate-500 text-xs mb-5">
-      Use this playground to test generating invitation links automatically via external workflows (like N8N or custom APIs).
+      Use this playground to test generating invitation links automatically via external workflows (like N8N or custom
+      APIs).
     </p>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -561,43 +628,44 @@
         </div>
 
         @if (playgroundEndpointMode() === 'single') {
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">TARGET EMAIL</label>
-            <input type="email" [value]="playgroundEmail()" (input)="onPlaygroundEmailInput($event)"
-              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
-          </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">TARGET EMAIL</label>
+          <input type="email" [value]="playgroundEmail()" (input)="onPlaygroundEmailInput($event)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+        </div>
 
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT PLATFORM</label>
-            <select [value]="playgroundPlatform()" (change)="onPlaygroundPlatformInput($event)"
-              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
-              @for (p of platforms(); track p.id) {
-              <option [value]="p.name">{{ p.name }}</option>
-              }
-              @empty {
-              <option value="Steam">Steam</option>
-              }
-            </select>
-          </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT PLATFORM</label>
+          <select [value]="playgroundPlatform()" (change)="onPlaygroundPlatformInput($event)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
+            @for (p of platforms(); track p.id) {
+            <option [value]="p.name">{{ p.name }}</option>
+            }
+            @empty {
+            <option value="Steam">Steam</option>
+            }
+          </select>
+        </div>
         } @else {
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT ACCOUNT BUNDLE</label>
-            <select [value]="playgroundBundleId()" (change)="onPlaygroundBundleInput($event)"
-              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
-              @for (b of accountBundles(); track b.id) {
-              <option [value]="b.id">{{ b.name }} (ID: {{ b.id }})</option>
-              }
-              @empty {
-              <option value="1">No bundles available</option>
-              }
-            </select>
-          </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">SELECT ACCOUNT BUNDLE</label>
+          <select [value]="playgroundBundleId()" (change)="onPlaygroundBundleInput($event)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600 cursor-pointer">
+            @for (b of accountBundles(); track b.id) {
+            <option [value]="b.id">{{ b.name }} (ID: {{ b.id }})</option>
+            }
+            @empty {
+            <option value="1">No bundles available</option>
+            }
+          </select>
+        </div>
 
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">QUANTITY TO GENERATE</label>
-            <input type="number" [value]="playgroundQuantity()" (input)="onPlaygroundQuantityInput($event)" min="1" max="1000"
-              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
-          </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">QUANTITY TO GENERATE</label>
+          <input type="number" [value]="playgroundQuantity()" (input)="onPlaygroundQuantityInput($event)" min="1"
+            max="1000"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
+        </div>
         }
 
         <div>
@@ -608,7 +676,8 @@
 
         <div>
           <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1">BATCH TAG (OPTIONAL)</label>
-          <input type="text" [value]="playgroundTag()" (input)="onPlaygroundTagInput($event)" placeholder="e.g. Summer-Promo"
+          <input type="text" [value]="playgroundTag()" (input)="onPlaygroundTagInput($event)"
+            placeholder="e.g. Summer-Promo"
             class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-808 outline-none focus:border-emerald-600" />
         </div>
 
@@ -828,13 +897,15 @@
   <!-- CUSTOM STATIC PAGE EDITOR MODAL DIALOG -->
   @if (isPageModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="w-full max-w-xl bg-white border border-slate-250 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-zoomIn">
+    <div
+      class="w-full max-w-xl bg-white border border-slate-250 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-zoomIn">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center shrink-0">
         <h3 class="text-sm font-bold text-slate-850">
           {{ editingPageId() !== null ? 'Edit Custom Page' : 'Add Custom Page' }}
         </h3>
-        <button type="button" (click)="isPageModalOpen.set(false)" class="text-slate-400 hover:text-slate-750 transition cursor-pointer">
+        <button type="button" (click)="isPageModalOpen.set(false)"
+          class="text-slate-400 hover:text-slate-750 transition cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
@@ -851,12 +922,14 @@
           <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">SLUG (OPTIONAL)</label>
           <input type="text" [(ngModel)]="pageFormSlug" placeholder="e.g. terms-of-service"
             class="w-full bg-white border border-slate-350 focus:border-indigo-600 rounded-lg px-3.5 py-2 text-xs text-slate-808 outline-none transition" />
-          <p class="text-[9px] text-slate-450 mt-1">Leave empty to auto-generate from Title. Must be lowercase letters, numbers, and dashes.</p>
+          <p class="text-[9px] text-slate-450 mt-1">Leave empty to auto-generate from Title. Must be lowercase letters,
+            numbers, and dashes.</p>
         </div>
 
         <div>
           <label class="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">HTML / TEXT CONTENT</label>
-          <textarea [(ngModel)]="pageFormContent" placeholder="Enter page content details. HTML tags are supported..." rows="8"
+          <textarea [(ngModel)]="pageFormContent" placeholder="Enter page content details. HTML tags are supported..."
+            rows="8"
             class="w-full bg-white border border-slate-350 focus:border-indigo-600 rounded-lg px-3.5 py-2 font-mono text-xs text-slate-808 outline-none resize-none transition"></textarea>
         </div>
 

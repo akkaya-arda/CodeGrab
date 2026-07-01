@@ -274,7 +274,7 @@ class AccessGrantController extends Controller
                 'support_portal_enabled' => \App\Models\Setting::getValue('support_portal_enabled', '0') === '1',
                 'support_mode' => \App\Models\Setting::getValue('support_mode', 'built_in'),
                 'support_custom_script' => \App\Models\Setting::getValue('support_custom_script', ''),
-                'system_name' => \App\Models\Setting::getValue('system_name', 'Raven'),
+                'system_name' => \App\Models\Setting::getValue('system_name', ''),
                 'system_logo' => \App\Models\Setting::getValue('system_logo', ''),
                 'logo_enabled' => \App\Models\Setting::getValue('logo_enabled', '1') === '1',
                 'theme_primary_color' => \App\Models\Setting::getValue('theme_primary_color', '#4f46e5'),
@@ -284,6 +284,8 @@ class AccessGrantController extends Controller
                 'system_slogan_subtitle' => \App\Models\Setting::getValue('system_slogan_subtitle', 'Retrieve your 2FA codes easily.'),
                 'copyright_text' => \App\Models\Setting::getValue('copyright_text', ''),
                 'hide_access_restricted_info' => \App\Models\Setting::getValue('hide_access_restricted_info', '0') === '1',
+                'light_mode' => \App\Models\Setting::getValue('light_mode', '0') === '1',
+                'public_portal_title' => \App\Models\Setting::getValue('public_portal_title') ?: \App\Models\Setting::getValue('system_name', 'Guard Helper'),
             ]
         ]);
     }

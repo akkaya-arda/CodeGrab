@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed, OnDestroy, Renderer2 } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, OnDestroy, Renderer2, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -120,7 +120,13 @@ export class PublicGrabCode implements OnInit, OnDestroy {
   protected showPageModal = signal<boolean>(false);
   protected isLoadingPageContent = signal<boolean>(false);
 
-  constructor() { }
+  constructor() {
+    effect(() => {
+      const portalTitle = this.themeService.publicPortalTitle();
+      const sysName = this.themeService.systemName();
+      document.title = portalTitle || sysName || 'Guard Helper';
+    });
+  }
 
   ngOnInit(): void {
     const savedTheme = localStorage.getItem('theme');
@@ -165,13 +171,12 @@ export class PublicGrabCode implements OnInit, OnDestroy {
 
       if (cached && cachedTime) {
         const age = Date.now() - parseInt(cachedTime, 10);
-        const fifteenMinutes = 15 * 60 * 1000;
-        if (age < fifteenMinutes) {
+        const duration = this.themeService.platformsCacheDuration;
+        if (age < duration) {
           try {
             const data = JSON.parse(cached);
             return of(data);
           } catch (e) {
-            // fallback
           }
         }
       }
@@ -225,7 +230,7 @@ export class PublicGrabCode implements OnInit, OnDestroy {
           this.totalLimit.set(response.data.limit);
           this.expiresAt.set(response.data.expires_at || null);
           this.hideEmail.set(response.data.hide_email === true);
-          
+
           const bundle = response.data.account_bundle;
           if (bundle) {
             this.hasBundle.set(true);
@@ -253,7 +258,9 @@ export class PublicGrabCode implements OnInit, OnDestroy {
             response.data.logo_enabled,
             response.data.theme_font_family,
             response.data.copyright_text,
-            response.data.hide_access_restricted_info
+            response.data.hide_access_restricted_info,
+            response.data.light_mode,
+            response.data.public_portal_title
           );
         } else {
           this.isTokenValid.set(false);
@@ -292,13 +299,15 @@ export class PublicGrabCode implements OnInit, OnDestroy {
           response.logo_enabled,
           response.theme_font_family,
           response.copyright_text,
-          response.hide_access_restricted_info
+          response.hide_access_restricted_info,
+          response.light_mode,
+          response.public_portal_title
         );
       },
       error: () => {
         this.isPublicPortalChecking.set(false);
         this.isPublicPortalEnabled.set(false);
-        this.themeService.applyBranding('Raven', '', '#4f46e5', '#6366f1');
+        this.themeService.applyBranding('Name', '', '#4f46e5', '#6366f1');
       }
     });
   }
@@ -599,11 +608,12 @@ export class PublicGrabCode implements OnInit, OnDestroy {
       // Load existing thread messages
       this.loadSupportMessages();
 
-      // Start polling every 5 seconds
+      // Start polling every 5 seconds (15s if lightMode is on)
       if (!this.supportPollInterval) {
+        const intervalTime = this.themeService.lightMode() ? 15000 : 5000;
         this.supportPollInterval = setInterval(() => {
           this.loadSupportMessages();
-        }, 5000);
+        }, intervalTime);
       }
     }
   }
@@ -745,7 +755,9 @@ export class PublicGrabCode implements OnInit, OnDestroy {
           response.logo_enabled,
           response.theme_font_family,
           response.copyright_text,
-          response.hide_access_restricted_info
+          response.hide_access_restricted_info,
+          response.light_mode,
+          response.public_portal_title
         );
       }
     });

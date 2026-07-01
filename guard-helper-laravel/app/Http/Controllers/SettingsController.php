@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    
+
     public function getSettings(Request $request)
     {
         $keys = [
@@ -41,6 +41,8 @@ class SettingsController extends Controller
             'copyright_text',
             'hide_access_restricted_info',
             'email_timeframe_limit',
+            'light_mode',
+            'public_portal_title',
         ];
 
         $settings = [];
@@ -48,7 +50,7 @@ class SettingsController extends Controller
             $settings[$key] = Setting::getValue($key, $this->getDefaultValue($key));
         }
 
-        
+
         if (!empty($settings['smtp_password'])) {
             $settings['smtp_password'] = '********';
         }
@@ -59,7 +61,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    
+
     public function saveSettings(Request $request)
     {
         $data = $request->validate([
@@ -93,15 +95,17 @@ class SettingsController extends Controller
             'copyright_text' => 'nullable|string',
             'hide_access_restricted_info' => 'nullable|string',
             'email_timeframe_limit' => 'nullable|integer',
+            'light_mode' => 'nullable|string',
+            'public_portal_title' => 'nullable|string',
         ]);
 
         foreach ($data as $key => $value) {
-            
+
             if ($key === 'smtp_password' && $value === '********') {
                 continue;
             }
-            
-            if (in_array($key, ['telegram_enabled', 'smtp_enabled', 'public_access_portal_enabled', 'telegram_webhook_active', 'support_portal_enabled', 'logo_enabled', 'hide_access_restricted_info'])) {
+
+            if (in_array($key, ['telegram_enabled', 'smtp_enabled', 'public_access_portal_enabled', 'telegram_webhook_active', 'support_portal_enabled', 'logo_enabled', 'hide_access_restricted_info', 'light_mode'])) {
                 $value = ($value === '1' || $value === 'true' || $value === true) ? '1' : '0';
             }
             Setting::setValue($key, $value ?? '');
@@ -113,7 +117,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    
+
     public function testSmtp(Request $request)
     {
         $data = $request->validate([
@@ -127,13 +131,13 @@ class SettingsController extends Controller
             'smtp_to_address' => 'required|string',
         ]);
 
-        
+
         if ($data['smtp_password'] === '********') {
             $data['smtp_password'] = Setting::getValue('smtp_password');
         }
 
         try {
-            
+
             \Illuminate\Support\Facades\Config::set('mail.mailers.test_smtp', [
                 'transport' => 'smtp',
                 'host' => $data['smtp_host'],
@@ -141,13 +145,13 @@ class SettingsController extends Controller
                 'encryption' => $data['smtp_encryption'] === 'none' ? null : $data['smtp_encryption'],
                 'username' => $data['smtp_username'],
                 'password' => $data['smtp_password'],
-                'timeout' => 10, 
+                'timeout' => 10,
             ]);
 
             \Illuminate\Support\Facades\Config::set('mail.from.address', $data['smtp_from_address']);
             \Illuminate\Support\Facades\Config::set('mail.from.name', $data['smtp_from_name'] ?: 'Guard Helper Test');
 
-            
+
             $notification = new \App\Models\Notification([
                 'type' => 'test_alert',
                 'title' => 'SMTP Test Connection Successful',
@@ -170,7 +174,7 @@ class SettingsController extends Controller
         }
     }
 
-    
+
     public function toggleTelegramWebhook(Request $request)
     {
         $request->validate([
@@ -187,7 +191,7 @@ class SettingsController extends Controller
             ], 400);
         }
 
-        
+
         $appUrl = config('app.url') ?: 'http://localhost:8000';
         $host = parse_url($appUrl, PHP_URL_HOST) ?: request()->getHost();
 
@@ -202,7 +206,7 @@ class SettingsController extends Controller
 
         if ($activate) {
             $webhookUrl = rtrim($appUrl, '/') . '/api/webhook/telegram/message';
-            
+
             try {
                 $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/setWebhook", [
                     'url' => $webhookUrl
@@ -273,7 +277,7 @@ class SettingsController extends Controller
             case 'support_custom_script':
                 return '';
             case 'system_name':
-                return 'Raven';
+                return '';
             case 'system_logo':
                 return '';
             case 'logo_enabled':
@@ -292,6 +296,10 @@ class SettingsController extends Controller
                 return '';
             case 'hide_access_restricted_info':
                 return '0';
+            case 'light_mode':
+                return '0';
+            case 'public_portal_title':
+                return Setting::getValue('system_name') ?: 'Guard Helper';
             case 'email_timeframe_limit':
                 return '1200';
             case 'webhook_secret_key':
@@ -303,7 +311,7 @@ class SettingsController extends Controller
         }
     }
 
-    
+
     public function getOAuthConfig(Request $request)
     {
         $googleClientId = config('oauth.google.client_id') ?: env('GOOGLE_OAUTH_CLIENT_ID');
@@ -322,7 +330,7 @@ class SettingsController extends Controller
                 'google_client_secret_exists' => !empty($googleClientSecret),
                 'google_redirect_uri' => $googleRedirectUri ?: url('/api/oauth/google/callback'),
                 'google_is_configured' => !empty($googleClientId) && !empty($googleClientSecret),
-                
+
                 'outlook_tenant' => $outlookTenant,
                 'outlook_client_id' => $outlookClientId ?: '',
                 'outlook_client_secret_exists' => !empty($outlookClientSecret),
@@ -417,15 +425,15 @@ class SettingsController extends Controller
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
             $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
-            
+
             $destinationPath = public_path('uploads');
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
-            
+
             $file->move($destinationPath, $filename);
             $logoPath = '/uploads/' . $filename;
-            
+
             Setting::setValue('system_logo', $logoPath);
 
             return response()->json([

@@ -12,10 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(\App\Http\Middleware\CheckAppInstalled::class);
         $middleware->validateCsrfTokens(except: [
             'install/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
     })->create();

@@ -13,10 +13,10 @@ class OutlookOAuthService
     private string $tenant;
     public function __construct()
     {
-        $this->clientId = config('oauth.outlook.client_id');
-        $this->clientSecret = config('oauth.outlook.client_secret');
-        $this->redirectUri = config('oauth.outlook.redirect_uri');
-        $this->tenant = config('oauth.outlook.tenant');
+        $this->clientId = config('oauth.outlook.client_id') ?: '';
+        $this->clientSecret = config('oauth.outlook.client_secret') ?: '';
+        $this->redirectUri = config('oauth.outlook.redirect_uri') ?: '';
+        $this->tenant = config('oauth.outlook.tenant') ?: '';
     }
     public function getOutlookRedirectLink(array $state)
     {

@@ -12,9 +12,9 @@ class GoogleOAuthService
     private string $redirectUri;
     public function __construct()
     {
-        $this->clientId = config('oauth.google.client_id');
-        $this->clientSecret = config('oauth.google.client_secret');
-        $this->redirectUri = config('oauth.google.redirect_uri');
+        $this->clientId = config('oauth.google.client_id') ?: '';
+        $this->clientSecret = config('oauth.google.client_secret') ?: '';
+        $this->redirectUri = config('oauth.google.redirect_uri') ?: '';
     }
 
     public function getGoogleRedirectLink(array $state): string

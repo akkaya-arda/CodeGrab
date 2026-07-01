@@ -147,17 +147,21 @@ export class PanelLayout implements OnInit, OnDestroy {
 
   constructor(protected layoutServices: LayoutServices) {}
 
+  private notificationInterval: any = null;
+
   ngOnInit() {
     this.authenticationService.loadCurrentUser().subscribe();
     this.fetchUnreadCount();
     this.loadBranding();
     this.expandActiveParent(this.router.url);
 
-    // Fetch unread count on every route change navigation
+    // Fetch unread count on every route change navigation ONLY if light mode is disabled
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      this.fetchUnreadCount();
+      if (!this.themeService.lightMode()) {
+        this.fetchUnreadCount();
+      }
       this.expandActiveParent(event.urlAfterRedirects || event.url);
     });
   }
@@ -188,16 +192,32 @@ export class PanelLayout implements OnInit, OnDestroy {
             data.logo_enabled === '1',
             data.theme_font_family,
             data.copyright_text,
-            data.hide_access_restricted_info === '1'
+            data.hide_access_restricted_info === '1',
+            data.light_mode === '1',
+            data.public_portal_title
           );
+          this.setupNotificationPolling();
         }
       }
     });
   }
 
+  private setupNotificationPolling() {
+    if (this.notificationInterval) {
+      clearInterval(this.notificationInterval);
+    }
+    const intervalTime = this.themeService.lightMode() ? 60000 : 20000;
+    this.notificationInterval = setInterval(() => {
+      this.fetchUnreadCount();
+    }, intervalTime);
+  }
+
   ngOnDestroy() {
     if (this.routerSubscription) {
       this.routerSubscription.unsubscribe();
+    }
+    if (this.notificationInterval) {
+      clearInterval(this.notificationInterval);
     }
   }
 

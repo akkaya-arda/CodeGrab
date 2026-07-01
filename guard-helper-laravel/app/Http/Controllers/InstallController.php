@@ -125,6 +125,63 @@ class InstallController extends Controller
             ], 400);
         }
 
+        config([
+            'database.connections.temp_check' => [
+                'driver' => $connection,
+                'host' => $data['db_host'] ?? '',
+                'port' => $data['db_port'] ?? '',
+                'database' => $database,
+                'username' => $data['db_username'] ?? '',
+                'password' => $data['db_password'] ?? '',
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+            ]
+        ]);
+
+        $hasTable = false;
+        try {
+            $hasTable = DB::connection('temp_check')->getSchemaBuilder()->hasTable('account_bundles');
+        } catch (\Exception $e) {
+        }
+
+        if ($hasTable) {
+            $firstBundle = DB::connection('temp_check')->table('account_bundles')->first();
+            if ($firstBundle && isset($firstBundle->password)) {
+                $key = $request->input('app_key') ?: env('APP_KEY');
+                $mismatch = false;
+                if ($key) {
+                    if (str_starts_with($key, 'base64:')) {
+                        $key = base64_decode(substr($key, 7));
+                    }
+                    try {
+                        $cipher = config('app.cipher', 'AES-256-CBC');
+                        $encrypter = new \Illuminate\Encryption\Encrypter($key, $cipher);
+                        $encrypter->decryptString($firstBundle->password);
+                    } catch (\Exception $e) {
+                        $mismatch = true;
+                    }
+                } else {
+                    $mismatch = true;
+                }
+
+                if ($mismatch) {
+                    if ($request->input('wipe_database') === true || $request->input('wipe_database') === 'true' || $request->input('wipe_database') === 1 || $request->input('wipe_database') === '1') {
+                        Artisan::call('db:wipe', ['--database' => 'temp_check', '--force' => true]);
+                        DB::purge('temp_check');
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'error_type' => 'mac_mismatch',
+                            'message' => 'The selected database contains existing encrypted records that cannot be decrypted with the chosen key (MAC mismatch). Reinstalling with a different key will break access to this data. Would you like to wipe the database and install clean?'
+                        ], 400);
+                    }
+                }
+            }
+        }
+
+        DB::purge('temp_check');
+
 
         $this->updateEnvFile('DB_CONNECTION', $connection);
         if ($connection === 'sqlite') {
@@ -162,6 +219,7 @@ class InstallController extends Controller
             'admin_password' => 'required|string|min:8',
             'telegram_bot_token' => 'nullable|string|max:255',
             'telegram_chat_id' => 'nullable|string|max:255',
+            'app_key' => 'nullable|string',
         ]);
 
         try {
@@ -172,7 +230,9 @@ class InstallController extends Controller
             Artisan::call('db:seed', ['--force' => true]);
             Artisan::call('db:seed', ['--class' => 'PlatformSeeder']);
 
-            if (empty(env('APP_KEY'))) {
+            if ($request->filled('app_key')) {
+                $this->updateEnvFile('APP_KEY', $request->input('app_key'));
+            } else {
                 Artisan::call('key:generate', ['--force' => true]);
             }
         } catch (\Exception $e) {
@@ -214,11 +274,14 @@ class InstallController extends Controller
         }
 
         try {
+            $this->updateEnvFile('APP_NAME', $data['system_name']);
+            $this->updateEnvFile('APP_URL', $request->getSchemeAndHttpHost());
+            $this->updateEnvFile('APP_ENV', 'production');
+            $this->updateEnvFile('APP_DEBUG', 'false');
             $this->updateEnvFile('ADMIN_NAME', $data['admin_name']);
             $this->updateEnvFile('ADMIN_EMAIL', $data['admin_email']);
             $this->updateEnvFile('ADMIN_PASSWORD', $data['admin_password']);
         } catch (\Exception $e) {
-            // Ignore env write failure here if DB config succeeded
         }
 
         try {

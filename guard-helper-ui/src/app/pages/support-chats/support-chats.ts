@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SupportService } from '../../services/support-service';
 import { ToastrService } from 'ngx-toastr';
 import { LayoutServices } from '../../services/layout-services';
+import { ThemeService } from '../../services/theme-service';
 
 interface SupportMessage {
   id: number;
@@ -36,6 +37,7 @@ export class SupportChats implements OnInit, OnDestroy, AfterViewChecked {
   private supportService = inject(SupportService);
   private toastr = inject(ToastrService);
   private layoutServices = inject(LayoutServices);
+  private themeService = inject(ThemeService);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
@@ -57,10 +59,11 @@ export class SupportChats implements OnInit, OnDestroy, AfterViewChecked {
   ngOnInit(): void {
     this.loadThreads();
     
-    // Periodically update the list of threads every 10 seconds
+    // Periodically update the list of threads (10s normal, 30s in light mode)
+    const listIntervalTime = this.themeService.lightMode() ? 30000 : 10000;
     this.listPollInterval = setInterval(() => {
       this.loadThreads(true);
-    }, 10000);
+    }, listIntervalTime);
   }
 
   ngOnDestroy(): void {
@@ -117,10 +120,11 @@ export class SupportChats implements OnInit, OnDestroy, AfterViewChecked {
 
     this.loadActiveThreadMessages(false);
 
-    // Setup polling for the selected thread messages every 4 seconds
+    // Setup polling for the selected thread messages (4s normal, 15s in light mode)
+    const threadIntervalTime = this.themeService.lightMode() ? 15000 : 4000;
     this.threadPollInterval = setInterval(() => {
       this.loadActiveThreadMessages(true);
-    }, 4000);
+    }, threadIntervalTime);
   }
 
   private loadActiveThreadMessages(silent = false) {

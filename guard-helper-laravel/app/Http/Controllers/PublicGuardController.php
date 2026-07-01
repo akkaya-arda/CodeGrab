@@ -25,14 +25,14 @@ class PublicGuardController extends Controller
     {
         $email = $request->query('email');
         $hideEmail = false;
-        
+
         if ($email) {
             $email = trim($email);
-            
+
             $exists = \App\Models\GmailAccount::where('email', $email)->exists() ||
-                      \App\Models\OutlookAccount::where('email', $email)->exists() ||
-                      \App\Models\ImapAccount::where('email', $email)->exists();
-            
+                \App\Models\OutlookAccount::where('email', $email)->exists() ||
+                \App\Models\ImapAccount::where('email', $email)->exists();
+
             if (!$exists) {
                 return response()->json([
                     'success' => false,
@@ -40,13 +40,13 @@ class PublicGuardController extends Controller
                 ], 404);
             }
 
-            
+
             $hideEmail = \App\Models\AccountBundle::where('email', $email)
                 ->where('is_active', true)
                 ->where('hide_email', true)
                 ->exists();
 
-            
+
             $hasAssignments = \App\Models\EmailPlatformAssignment::where('email', $email)->exists();
             if ($hasAssignments) {
                 $platformIds = \App\Models\EmailPlatformAssignment::where('email', $email)
@@ -69,7 +69,7 @@ class PublicGuardController extends Controller
             'support_portal_enabled' => \App\Models\Setting::getValue('support_portal_enabled', '0') === '1',
             'support_mode' => \App\Models\Setting::getValue('support_mode', 'built_in'),
             'support_custom_script' => \App\Models\Setting::getValue('support_custom_script', ''),
-            'system_name' => \App\Models\Setting::getValue('system_name', 'Raven'),
+            'system_name' => \App\Models\Setting::getValue('system_name', ''),
             'system_logo' => \App\Models\Setting::getValue('system_logo', ''),
             'logo_enabled' => \App\Models\Setting::getValue('logo_enabled', '1') === '1',
             'theme_primary_color' => \App\Models\Setting::getValue('theme_primary_color', '#4f46e5'),
@@ -79,6 +79,8 @@ class PublicGuardController extends Controller
             'system_slogan_subtitle' => \App\Models\Setting::getValue('system_slogan_subtitle', 'Retrieve your 2FA codes easily.'),
             'copyright_text' => \App\Models\Setting::getValue('copyright_text', ''),
             'hide_access_restricted_info' => \App\Models\Setting::getValue('hide_access_restricted_info', '0') === '1',
+            'light_mode' => \App\Models\Setting::getValue('light_mode', '0') === '1',
+            'public_portal_title' => \App\Models\Setting::getValue('public_portal_title') ?: \App\Models\Setting::getValue('system_name', 'Guard Helper'),
         ]);
     }
 
@@ -87,7 +89,7 @@ class PublicGuardController extends Controller
         $token = $request->post('token');
         $grant = null;
 
-        
+
         $publicEnabled = \App\Models\Setting::getValue('public_access_portal_enabled', '0') === '1';
 
         if (!$token && !$publicEnabled) {
@@ -98,7 +100,7 @@ class PublicGuardController extends Controller
         }
 
         if ($token) {
-            
+
             $grant = \App\Models\AccessGrant::where('token', $token)->first();
 
             if (!$grant) {
@@ -125,7 +127,7 @@ class PublicGuardController extends Controller
             $email = $grant->email;
             $platformName = $grant->platform;
         } else {
-            
+
             $request->validate([
                 'email' => 'required|email',
                 'platform' => 'required|string',
@@ -135,18 +137,18 @@ class PublicGuardController extends Controller
             $platformName = $request->post('platform');
         }
 
-        
+
         $accountType = null;
         $account = null;
 
-        
+
         $gmailAcc = GmailAccount::where('email', $email)->first();
         if ($gmailAcc) {
             $account = $gmailAcc;
             $accountType = 'gmail';
         }
 
-        
+
         if (!$account) {
             $outlookAcc = OutlookAccount::where('email', $email)->first();
             if ($outlookAcc) {
@@ -155,7 +157,7 @@ class PublicGuardController extends Controller
             }
         }
 
-        
+
         if (!$account) {
             $imapAcc = ImapAccount::where('email', $email)->first();
             if ($imapAcc) {
@@ -164,7 +166,7 @@ class PublicGuardController extends Controller
             }
         }
 
-        
+
         if (!$account) {
             GuardFetchLog::create([
                 'email' => $email,
@@ -195,7 +197,7 @@ class PublicGuardController extends Controller
             ], 400);
         }
 
-        
+
         $platform = PlatformGuardEmailFilter::where('name', $platformName)->first();
         if (!$platform) {
             GuardFetchLog::create([
@@ -212,7 +214,7 @@ class PublicGuardController extends Controller
             ], 400);
         }
 
-        
+
         $hasAssignments = \App\Models\EmailPlatformAssignment::where('email', $email)->exists();
         if ($hasAssignments) {
             $isAssigned = \App\Models\EmailPlatformAssignment::where('email', $email)
@@ -243,7 +245,7 @@ class PublicGuardController extends Controller
             }
         }
 
-        
+
         $codeResult = null;
         try {
             $enableHeuristic = (bool) ($platform->enable_heuristic ?? false);
@@ -263,25 +265,25 @@ class PublicGuardController extends Controller
             ];
         }
 
-        
+
         if ($codeResult && $codeResult['success']) {
             $emailDate = isset($codeResult['date']) && $codeResult['date'] ? \Carbon\Carbon::parse($codeResult['date']) : null;
             $isRecent = false;
             if ($emailDate) {
                 $diff = now()->getTimestamp() - $emailDate->getTimestamp();
-                
+
                 $limit = (int) (\App\Models\Setting::getValue('email_timeframe_limit') ?? config('guard.timeframe_limit', 1200));
                 if ($diff >= -30 && $diff <= $limit) {
                     $isRecent = true;
                 }
             }
 
-            
+
             if (app()->runningUnitTests() && !request()->header('X-Test-Time-Constraint')) {
                 $isRecent = true;
             }
 
-            
+
             $lastSuccessLog = GuardFetchLog::where('email', $email)
                 ->where('platform', $platformName)
                 ->where('status', 'success')
@@ -292,13 +294,13 @@ class PublicGuardController extends Controller
             $isSameCode = $lastSuccessLog && ($lastSuccessLog->code === $codeResult['data']);
 
             if ($isRecent || $isSameCode) {
-                
+
                 if (!$isSameCode) {
-                    
+
                     $account->increment('fetch_count');
                     $account->update(['last_used_at' => now()]);
 
-                    
+
                     if ($grant) {
                         $grant->increment('uses');
                         if ($grant->limit !== null && $grant->uses >= $grant->limit) {
@@ -307,7 +309,7 @@ class PublicGuardController extends Controller
                     }
                 }
 
-                
+
                 $log = GuardFetchLog::create([
                     'email' => $email,
                     'account_type' => $accountType,
@@ -344,7 +346,7 @@ class PublicGuardController extends Controller
                     'error_message' => $errorMessage
                 ]);
 
-                
+
                 \App\Models\Notification::create([
                     'type' => 'fetch_error',
                     'title' => "Interception Failed: {$platformName}",
@@ -368,7 +370,7 @@ class PublicGuardController extends Controller
                 'error_message' => $errorMessage
             ]);
 
-            
+
             \App\Models\Notification::create([
                 'type' => 'fetch_error',
                 'title' => "Interception Failed: {$platformName}",
