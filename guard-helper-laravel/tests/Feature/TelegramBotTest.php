@@ -282,4 +282,81 @@ class TelegramBotTest extends TestCase
         ]);
         $response->assertStatus(403);
     }
+
+    public function test_telegram_add_bundle_wizard(): void
+    {
+        Http::fake();
+        $platform = \App\Models\PlatformGuardEmailFilter::create([
+            'name' => 'Steam',
+            'grab_regex' => '/Code: (.*)/i',
+            'sender_pattern' => 'noreply@steampowered.com'
+        ]);
+        $gmail = \App\Models\GmailAccount::create([
+            'id' => 9999,
+            'email' => 'wizard@gmail.com',
+            'access_token' => 'token',
+            'access_token_expires_at' => now()->addHour()->toDateTimeString(),
+            'refresh_token' => 'refresh',
+            'refresh_token_expires_at' => now()->addDays(30)->toDateTimeString(),
+            'is_active' => true
+        ]);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_add',
+                'data' => 'bundle_add',
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 300
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_add_pl',
+                'data' => "b_add_pl:{$platform->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 301
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_add_em',
+                'data' => "b_add_em:{$platform->id}:gmail_{$gmail->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 302
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        $this->assertTrue(\Illuminate\Support\Facades\Cache::has('tg_add_bundle_987654321'));
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'message' => [
+                'chat' => ['id' => 987654321],
+                'text' => 'Wizard Steam | secretpass123 | wizard_user',
+                'message_id' => 303
+            ]
+        ]);
+        $response->assertStatus(200);
+
+        $bundle = \App\Models\AccountBundle::where('name', 'Wizard Steam')->first();
+        $this->assertNotNull($bundle);
+        $this->assertEquals('wizard@gmail.com', $bundle->email);
+        $this->assertEquals($platform->name, $bundle->platform);
+        $this->assertEquals('wizard_user', $bundle->login_username);
+        $this->assertEquals('secretpass123', $bundle->password);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'sendMessage')
+                && str_contains($request['text'] ?? '', 'Account Bundle Added Successfully!');
+        });
+    }
 }

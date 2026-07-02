@@ -12,6 +12,21 @@ class TelegramCommandHandler
     {
         $text = trim($text);
 
+        if ($text === '/cancel' || $text === '/menu' || $text === '/start') {
+            \Illuminate\Support\Facades\Cache::forget('tg_add_bundle_' . $chatId);
+            if ($text === '/start' || $text === '/menu') {
+                $this->sendMainMenu($chatId);
+                return;
+            }
+            $this->telegramService->sendMessage($chatId, "❌ <b>Add Bundle Wizard cancelled.</b>");
+            return;
+        }
+
+        if (\Illuminate\Support\Facades\Cache::has('tg_add_bundle_' . $chatId)) {
+            $this->handleWizardCredentials($chatId, $text);
+            return;
+        }
+
         if ($text === '/start' || $text === '/menu') {
             $this->sendMainMenu($chatId);
             return;
@@ -280,5 +295,81 @@ class TelegramCommandHandler
         ];
 
         $this->telegramService->sendMessage($chatId, $msg, $keyboard);
+    }
+
+    private function handleWizardCredentials(string $chatId, string $text): void
+    {
+        $state = \Illuminate\Support\Facades\Cache::pull('tg_add_bundle_' . $chatId);
+        if (!$state) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Session expired</b>. Please start again.");
+            return;
+        }
+
+        $parts = array_map('trim', explode('|', $text));
+        if (count($parts) < 2) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Error</b>: Invalid format.\nFormat: <code>Name | Password | [Username]</code>\nPlease click <b>➕ Add New Bundle</b> again to restart the wizard.");
+            return;
+        }
+
+        $name = $parts[0];
+        $password = $parts[1];
+        $username = $parts[2] ?? null;
+
+        $platformId = $state['platform_id'];
+        $emailKey = $state['email_key'];
+
+        $platform = \App\Models\PlatformGuardEmailFilter::find($platformId);
+        $email = $this->resolveEmailFromKey($emailKey);
+
+        if (!$platform || !$email) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Error</b>: Invalid configuration. Please restart the wizard.");
+            return;
+        }
+
+        $bundle = \App\Models\AccountBundle::create([
+            'name' => $name,
+            'email' => $email,
+            'platform' => $platform->name,
+            'password' => $password,
+            'login_username' => $username,
+            'is_active' => true,
+            'hide_email' => false
+        ]);
+
+        $msg = "✅ <b>Account Bundle Added Successfully!</b>\n\n"
+             . "📦 <b>Name</b>: <code>" . htmlspecialchars($bundle->name) . "</code>\n"
+             . "📧 <b>Email</b>: <code>" . htmlspecialchars($bundle->email) . "</code>\n"
+             . "🎮 <b>Platform</b>: <code>" . htmlspecialchars($bundle->platform) . "</code>\n"
+             . "👤 <b>User</b>: <code>" . htmlspecialchars($bundle->login_username ?? 'None') . "</code>";
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '📦 Manage Bundles', 'callback_data' => 'menu:manage_bundles']],
+                [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->sendMessage($chatId, $msg, $keyboard);
+    }
+
+    private function resolveEmailFromKey(string $key): ?string
+    {
+        $parts = explode('_', $key);
+        if (count($parts) < 2) {
+            return null;
+        }
+
+        $type = $parts[0];
+        $id = (int)$parts[1];
+
+        if ($type === 'gmail') {
+            return \App\Models\GmailAccount::find($id)?->email;
+        } elseif ($type === 'outlook') {
+            return \App\Models\OutlookAccount::find($id)?->email;
+        } elseif ($type === 'imap') {
+            return \App\Models\ImapAccount::find($id)?->email;
+        }
+
+        return null;
     }
 }

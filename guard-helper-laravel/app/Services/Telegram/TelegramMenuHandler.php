@@ -108,7 +108,20 @@ class TelegramMenuHandler
         }
 
         if ($action === 'bundle_add') {
-            $this->showAddBundleGuide($chatId, $messageId);
+            $this->showAddBundlePlatform($chatId, $messageId);
+            return;
+        }
+
+        if ($action === 'b_add_pl') {
+            $platformId = $parts[1];
+            $this->showAddBundleMailbox($chatId, $messageId, $platformId);
+            return;
+        }
+
+        if ($action === 'b_add_em') {
+            $platformId = $parts[1];
+            $emailKey = $parts[2];
+            $this->showAddBundleCredentials($chatId, $messageId, $platformId, $emailKey);
             return;
         }
 
@@ -307,7 +320,10 @@ class TelegramMenuHandler
             'expires_at' => $expiresAt
         ]);
 
-        $frontendUrl = Setting::getValue('frontend_url', 'http://localhost:4200');
+        $frontendUrl = Setting::getValue('frontend_url');
+        if (empty($frontendUrl) || str_contains($frontendUrl, 'localhost') || str_contains($frontendUrl, '127.0.0.1')) {
+            $frontendUrl = url('/');
+        }
         $accessLink = rtrim($frontendUrl, '/') . '/grab-code?token=' . $grant->token;
 
         $expiryDisplay = $expiresAt ? $expiresAt->toDateTimeString() : 'Never';
@@ -772,7 +788,10 @@ class TelegramMenuHandler
             $limit = (int)$limitCode;
         }
 
-        $frontendUrl = Setting::getValue('frontend_url', 'http://localhost:4200');
+        $frontendUrl = Setting::getValue('frontend_url');
+        if (empty($frontendUrl) || str_contains($frontendUrl, 'localhost') || str_contains($frontendUrl, '127.0.0.1')) {
+            $frontendUrl = url('/');
+        }
         $links = [];
 
         for ($i = 0; $i < $quantity; $i++) {
@@ -836,20 +855,92 @@ class TelegramMenuHandler
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
 
-    private function showAddBundleGuide(string $chatId, int $messageId): void
+    private function showAddBundlePlatform(string $chatId, int $messageId): void
     {
-        $text = "➕ <b>Add New Account Bundle</b>\n\n"
-              . "You can open the secure WebApp form below to add a bundle, or send a message in this format:\n\n"
-              . "<code>/addbundle Name | Email | Platform | Password | [Username]</code>";
+        $platforms = PlatformGuardEmailFilter::all();
+        if ($platforms->isEmpty()) {
+            $this->showEmptyWarning($chatId, $messageId, "No platforms configured. Set up platform regex rules first.");
+            return;
+        }
 
-        $frontendUrl = \App\Models\Setting::getValue('frontend_url', 'http://localhost:4200');
-        $webAppUrl = rtrim($frontendUrl, '/') . '/telegram/add-bundle';
+        $text = "➕ <b>Add Account Bundle - Step 1:</b> Select system platform:";
+        $keyboard = ['inline_keyboard' => []];
+
+        foreach ($platforms as $pl) {
+            $keyboard['inline_keyboard'][] = [
+                ['text' => "🎮 {$pl->name}", 'callback_data' => "b_add_pl:{$pl->id}"]
+            ];
+        }
+
+        $keyboard['inline_keyboard'][] = [
+            ['text' => '⬅️ Back to List', 'callback_data' => 'menu:manage_bundles'],
+            ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showAddBundleMailbox(string $chatId, int $messageId, string $platformId): void
+    {
+        $accounts = $this->getRegisteredAccounts();
+        if (empty($accounts)) {
+            $this->showEmptyWarning($chatId, $messageId, "No email accounts registered. Connect a mailbox in the Admin panel first.");
+            return;
+        }
+
+        $platform = PlatformGuardEmailFilter::find($platformId);
+        if (!$platform) {
+            $this->showEmptyWarning($chatId, $messageId, "Selected platform not found.");
+            return;
+        }
+
+        $text = "➕ <b>Add Account Bundle - Step 2:</b> Select platform mailbox:\n🎮 <b>Platform</b>: <code>{$platform->name}</code>";
+        $keyboard = ['inline_keyboard' => []];
+
+        foreach ($accounts as $acc) {
+            $keyboard['inline_keyboard'][] = [
+                ['text' => "📧 {$acc['email']}", 'callback_data' => "b_add_em:{$platformId}:{$acc['key']}"]
+            ];
+        }
+
+        $keyboard['inline_keyboard'][] = [
+            ['text' => '⬅️ Back', 'callback_data' => 'bundle_add'],
+            ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showAddBundleCredentials(string $chatId, int $messageId, string $platformId, string $emailKey): void
+    {
+        $platform = PlatformGuardEmailFilter::find($platformId);
+        $email = $this->resolveEmailFromKey($emailKey);
+
+        if (!$platform || !$email) {
+            $this->showEmptyWarning($chatId, $messageId, "Invalid parameters detected.");
+            return;
+        }
+
+        \Illuminate\Support\Facades\Cache::put('tg_add_bundle_' . $chatId, [
+            'platform_id' => $platformId,
+            'email_key' => $emailKey
+        ], 600);
+
+        $text = "➕ <b>Add Account Bundle - Step 3:</b>\n\n"
+              . "🎮 <b>Platform</b>: <code>{$platform->name}</code>\n"
+              . "📧 <b>Email</b>: <code>{$email}</code>\n\n"
+              . "Please send a message to this chat containing the name and password in the following format:\n\n"
+              . "<code>Name | Password | [Username]</code>\n\n"
+              . "<b>Example:</b>\n"
+              . "<code>MySteam | secret123 | steam_user</code>\n\n"
+              . "<i>Or send /cancel to abort the wizard.</i>";
 
         $keyboard = [
             'inline_keyboard' => [
-                [['text' => '📱 Open WebApp Form', 'web_app' => ['url' => $webAppUrl]]],
-                [['text' => '⬅️ Back to List', 'callback_data' => 'menu:manage_bundles']],
-                [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => "b_add_pl:{$platformId}"],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
