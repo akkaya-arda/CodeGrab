@@ -72,15 +72,17 @@ for TARGET_DIR in dist/guard-helper-backend dist/SINGLE-FOLDER-DEPLOYMENT; do
 done
 
 echo "Clearing and optimizing Laravel configuration..."
-if [ -f "dist/guard-helper-backend/artisan" ]; then
-    cd dist/guard-helper-backend
-    php artisan config:clear
-    php artisan route:clear
-    php artisan view:clear
-    php artisan event:clear
-    php artisan optimize:clear
-    cd ../..
-fi
+for WORK_DIR in dist/guard-helper-backend dist/SINGLE-FOLDER-DEPLOYMENT; do
+    if [ -f "$WORK_DIR/artisan" ]; then
+        cd $WORK_DIR
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan event:clear
+        php artisan optimize:clear
+        cd ../..
+    fi
+done
 
 echo "Generating dual-folder secure deployment files..."
 cat << 'EOF' > dist/public_html/.htaccess
@@ -138,6 +140,12 @@ cat << 'EOF' > dist/SINGLE-FOLDER-DEPLOYMENT/public/.htaccess
         Options -MultiViews -Indexes
     </IfModule>
     RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/?(api|install) [NC]
+    RewriteRule ^ index.php [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [L]
 </IfModule>
 EOF
 

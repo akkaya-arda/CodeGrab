@@ -1,0 +1,64 @@
+<div class="form-container">
+  <div *ngIf="isSuccess()" class="success-container">
+    <div class="success-icon">✓</div>
+    <h2>Bundle Added!</h2>
+    <p>Account bundle created successfully. Returning to chat...</p>
+  </div>
+
+  <div *ngIf="!isSuccess()">
+    <h2>Add Account Bundle</h2>
+    <p style="font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin-bottom: 20px;">
+      Enter the credential properties for the new proxy node below.
+    </p>
+
+    <div *ngIf="errorMessage()" class="error-msg" style="margin-bottom: 15px; font-weight: bold;">
+      {{ errorMessage() }}
+    </div>
+
+    <form [formGroup]="bundleForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="name">Bundle Name</label>
+        <input type="text" id="name" formControlName="name" placeholder="e.g. Steam Main Node">
+        <div *ngIf="bundleForm.get('name')?.invalid && bundleForm.get('name')?.touched" class="error-msg">
+          Name is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail (Guard mailbox)</label>
+        <input type="email" id="email" formControlName="email" placeholder="e.g. example@gmail.com">
+        <div *ngIf="bundleForm.get('email')?.invalid && bundleForm.get('email')?.touched" class="error-msg">
+          Valid email is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="platform">Platform</label>
+        <select id="platform" formControlName="platform">
+          <option value="" disabled selected>Select Platform</option>
+          <option *ngFor="let pl of platforms()" [value]="pl.name">{{ pl.name }}</option>
+        </select>
+        <div *ngIf="bundleForm.get('platform')?.invalid && bundleForm.get('platform')?.touched" class="error-msg">
+          Platform selection is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Decryption Password</label>
+        <input type="password" id="password" formControlName="password" placeholder="••••••••">
+        <div *ngIf="bundleForm.get('password')?.invalid && bundleForm.get('password')?.touched" class="error-msg">
+          Password is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="login_username">Login Username (Optional)</label>
+        <input type="text" id="login_username" formControlName="login_username" placeholder="e.g. steam_admin">
+      </div>
+
+      <button type="submit" [disabled]="bundleForm.invalid || isSubmitting()">
+        {{ isSubmitting() ? 'Saving...' : 'Save Bundle' }}
+      </button>
+    </form>
+  </div>
+</div>

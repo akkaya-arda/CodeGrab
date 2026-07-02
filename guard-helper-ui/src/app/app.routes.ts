@@ -15,6 +15,7 @@ import { AccessGrants } from './pages/access-grants/access-grants';
 import { Account } from './pages/account/account';
 import { AccountBundles } from './pages/account-bundles/account-bundles';
 import { SupportChats } from './pages/support-chats/support-chats';
+import { TelegramAddBundle } from './pages/telegram-add-bundle/telegram-add-bundle';
 
 import { authGuard } from './guards/auth.guard';
 
@@ -26,6 +27,10 @@ export const routes: Routes = [
     {
         path: 'grab-code',
         component: PublicGrabCode
+    },
+    {
+        path: 'telegram/add-bundle',
+        component: TelegramAddBundle
     },
     {
         path: '',

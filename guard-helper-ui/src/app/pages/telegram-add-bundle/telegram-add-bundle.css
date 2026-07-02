@@ -1,0 +1,68 @@
+body {
+  background-color: var(--tg-theme-bg-color, #17212b);
+  color: var(--tg-theme-text-color, #f5f6f7);
+  font-family: sans-serif;
+  margin: 0;
+  padding: 16px;
+}
+.form-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 10px;
+}
+h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: var(--tg-theme-text-color, #f5f6f7);
+}
+.form-group {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #708499);
+  margin-bottom: 6px;
+}
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--tg-theme-hint-color, #3a4d5e);
+  background-color: var(--tg-theme-bg-color, #17212b);
+  color: var(--tg-theme-text-color, #f5f6f7);
+  box-sizing: border-box;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--tg-theme-button-color, #2481cc);
+}
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--tg-theme-button-color, #2481cc);
+  color: var(--tg-theme-button-text-color, #ffffff);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error-msg {
+  color: #ff5252;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.success-container {
+  text-align: center;
+  margin-top: 40px;
+}
+.success-icon {
+  font-size: 48px;
+  color: #4caf50;
+  margin-bottom: 16px;
+}

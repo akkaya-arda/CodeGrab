@@ -250,4 +250,36 @@ class TelegramBotTest extends TestCase
         $response->assertStatus(200);
         $this->assertNull(\App\Models\AccountBundle::find($bundle->id));
     }
+
+    public function test_telegram_web_app_endpoints_are_secure(): void
+    {
+        $botToken = '123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ';
+        $user = ['id' => 987654321, 'first_name' => 'Admin'];
+        $authDate = time();
+
+        $params = [
+            'auth_date' => $authDate,
+            'user' => json_encode($user)
+        ];
+        ksort($params);
+        $dataCheckStrings = [];
+        foreach ($params as $key => $val) {
+            $dataCheckStrings[] = "{$key}={$val}";
+        }
+        $dataCheckString = implode("\n", $dataCheckStrings);
+        $secretKey = hash_hmac('sha256', $botToken, 'Webapps', true);
+        $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
+        $validInitData = "auth_date={$authDate}&user=" . urlencode(json_encode($user)) . "&hash={$hash}";
+
+        $response = $this->postJson('/api/telegram-api/platforms', [
+            'init_data' => $validInitData
+        ]);
+        $response->assertStatus(200);
+        $response->assertJsonStructure(['success', 'platforms']);
+
+        $response = $this->postJson('/api/telegram-api/platforms', [
+            'init_data' => $validInitData . 'tampered'
+        ]);
+        $response->assertStatus(403);
+    }
 }

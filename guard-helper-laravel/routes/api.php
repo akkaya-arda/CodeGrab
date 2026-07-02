@@ -148,6 +148,11 @@ Route::prefix('webhook')->middleware('throttle:global_api')->group(function () {
     Route::post('generate-access-bulk', [ExternalWebhookController::class, 'generateAccessBulk']);
 });
 
+Route::prefix('telegram-api')->middleware('throttle:strict_action')->group(function () {
+    Route::post('platforms', [App\Http\Controllers\TelegramWebApiController::class, 'getPlatforms']);
+    Route::post('add-bundle', [App\Http\Controllers\TelegramWebApiController::class, 'addBundle']);
+});
+
 Route::get('get-time', function (Request $request) {
     return response()->json([
         'now' => Carbon::now()->toString(),

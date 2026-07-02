@@ -839,13 +839,15 @@ class TelegramMenuHandler
     private function showAddBundleGuide(string $chatId, int $messageId): void
     {
         $text = "➕ <b>Add New Account Bundle</b>\n\n"
-              . "To add a new bundle, please send a message to this chat in the following format:\n\n"
-              . "<code>/addbundle Name | Email | Platform | Password | [Username]</code>\n\n"
-              . "<b>Example:</b>\n"
-              . "<code>/addbundle MainSteam | steam_mail@gmail.com | Steam | secret_password | steam_user</code>";
+              . "You can open the secure WebApp form below to add a bundle, or send a message in this format:\n\n"
+              . "<code>/addbundle Name | Email | Platform | Password | [Username]</code>";
+
+        $frontendUrl = \App\Models\Setting::getValue('frontend_url', 'http://localhost:4200');
+        $webAppUrl = rtrim($frontendUrl, '/') . '/telegram/add-bundle';
 
         $keyboard = [
             'inline_keyboard' => [
+                [['text' => '📱 Open WebApp Form', 'web_app' => ['url' => $webAppUrl]]],
                 [['text' => '⬅️ Back to List', 'callback_data' => 'menu:manage_bundles']],
                 [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
             ]
