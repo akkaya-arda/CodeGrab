@@ -32,6 +32,11 @@ class TelegramCommandHandler
             return;
         }
 
+        if (str_starts_with($text, '/addbundle')) {
+            $this->handleAddBundle($chatId, $text);
+            return;
+        }
+
         $this->sendHelp($chatId);
     }
 
@@ -51,7 +56,10 @@ class TelegramCommandHandler
                     ['text' => '🎟 Active Access Grants', 'callback_data' => 'menu:active']
                 ],
                 [
-                    ['text' => '📊 Statistics', 'callback_data' => 'menu:stats'],
+                    ['text' => '📦 Manage Bundles', 'callback_data' => 'menu:manage_bundles'],
+                    ['text' => '📊 Statistics', 'callback_data' => 'menu:stats']
+                ],
+                [
                     ['text' => '⚙️ Settings', 'callback_data' => 'menu:settings']
                 ]
             ]
@@ -217,8 +225,60 @@ class TelegramCommandHandler
     {
         $text = "🤖 <b>CodeGrab Command Helper</b>\n\n"
               . "• Use /start or /menu to launch the interactive administration panel.\n"
+              . "• Use <code>/addbundle Name | Email | Platform | Password | [Username]</code> to create a new bundle.\n"
               . "• Interact with the inline buttons to verify connections, fetch codes, audit access links, or tweak parameters.";
 
         $this->telegramService->sendMessage($chatId, $text);
+    }
+
+    private function handleAddBundle(string $chatId, string $text): void
+    {
+        $raw = trim(substr($text, 10));
+        if (empty($raw)) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Error</b>: Please provide bundle details.\nFormat: <code>/addbundle Name | Email | Platform | Password | [Username]</code>");
+            return;
+        }
+
+        $parts = array_map('trim', explode('|', $raw));
+        if (count($parts) < 4) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Error</b>: Invalid format.\nFormat: <code>/addbundle Name | Email | Platform | Password | [Username]</code>\nExample: <code>/addbundle MySteam | test@mail.com | Steam | pass123</code>");
+            return;
+        }
+
+        $name = $parts[0];
+        $email = $parts[1];
+        $platform = $parts[2];
+        $password = $parts[3];
+        $username = $parts[4] ?? null;
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->telegramService->sendMessage($chatId, "⚠️ <b>Error</b>: Please enter a valid email address.");
+            return;
+        }
+
+        $bundle = \App\Models\AccountBundle::create([
+            'name' => $name,
+            'email' => $email,
+            'platform' => $platform,
+            'password' => $password,
+            'login_username' => $username,
+            'is_active' => true,
+            'hide_email' => false
+        ]);
+
+        $msg = "✅ <b>Account Bundle Added Successfully!</b>\n\n"
+             . "📦 <b>Name</b>: <code>" . htmlspecialchars($bundle->name) . "</code>\n"
+             . "📧 <b>Email</b>: <code>" . htmlspecialchars($bundle->email) . "</code>\n"
+             . "🎮 <b>Platform</b>: <code>" . htmlspecialchars($bundle->platform) . "</code>\n"
+             . "👤 <b>User</b>: <code>" . htmlspecialchars($bundle->login_username ?? 'None') . "</code>";
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '📦 Manage Bundles', 'callback_data' => 'menu:manage_bundles']],
+                [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->sendMessage($chatId, $msg, $keyboard);
     }
 }

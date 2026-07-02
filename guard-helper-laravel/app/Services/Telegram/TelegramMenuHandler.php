@@ -41,6 +41,8 @@ class TelegramMenuHandler
                 $this->showStatistics($chatId, $messageId);
             } elseif ($page === 'settings') {
                 $this->showSettings($chatId, $messageId);
+            } elseif ($page === 'manage_bundles') {
+                $this->showManageBundles($chatId, $messageId);
             }
             return;
         }
@@ -102,6 +104,29 @@ class TelegramMenuHandler
             $expiry = $parts[3];
             $limit = $parts[4];
             $this->executeBulkGenerate($chatId, $messageId, $bundleId, $quantity, $expiry, $limit);
+            return;
+        }
+
+        if ($action === 'bundle_add') {
+            $this->showAddBundleGuide($chatId, $messageId);
+            return;
+        }
+
+        if ($action === 'bundle_view') {
+            $bundleId = (int)$parts[1];
+            $this->showBundleDetails($chatId, $messageId, $bundleId);
+            return;
+        }
+
+        if ($action === 'bundle_toggle') {
+            $bundleId = (int)$parts[1];
+            $this->executeToggleBundle($chatId, $messageId, $bundleId);
+            return;
+        }
+
+        if ($action === 'bundle_delete') {
+            $bundleId = (int)$parts[1];
+            $this->executeDeleteBundle($chatId, $messageId, $bundleId);
             return;
         }
 
@@ -180,7 +205,7 @@ class TelegramMenuHandler
             ];
         }
 
-        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+        $keyboard['inline_keyboard'][] = [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']];
 
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
@@ -202,7 +227,10 @@ class TelegramMenuHandler
             ];
         }
 
-        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+        $keyboard['inline_keyboard'][] = [
+            ['text' => '⬅️ Back', 'callback_data' => 'menu:generate'],
+            ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+        ];
 
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
@@ -216,7 +244,10 @@ class TelegramMenuHandler
                 [['text' => '📆 1 Day', 'callback_data' => "gen_ex:{$emailKey}:{$platformId}:1d"]],
                 [['text' => '📅 7 Days', 'callback_data' => "gen_ex:{$emailKey}:{$platformId}:7d"]],
                 [['text' => '♾ Never Expire', 'callback_data' => "gen_ex:{$emailKey}:{$platformId}:never"]],
-                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => "gen_em:{$emailKey}"],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
@@ -232,7 +263,10 @@ class TelegramMenuHandler
                 [['text' => '5 Uses', 'callback_data' => "gen_li:{$emailKey}:{$platformId}:{$expiry}:5"]],
                 [['text' => '10 Uses', 'callback_data' => "gen_li:{$emailKey}:{$platformId}:{$expiry}:10"]],
                 [['text' => 'Unlimited', 'callback_data' => "gen_li:{$emailKey}:{$platformId}:{$expiry}:unlim"]],
-                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => "gen_pl:{$emailKey}:{$platformId}"],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
@@ -312,7 +346,7 @@ class TelegramMenuHandler
             ];
         }
 
-        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+        $keyboard['inline_keyboard'][] = [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']];
 
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
@@ -347,7 +381,10 @@ class TelegramMenuHandler
             ];
         }
 
-        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+        $keyboard['inline_keyboard'][] = [
+            ['text' => '⬅️ Back', 'callback_data' => 'menu:fetch'],
+            ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+        ];
 
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
@@ -638,7 +675,7 @@ class TelegramMenuHandler
             ];
         }
 
-        $keyboard['inline_keyboard'][] = [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']];
+        $keyboard['inline_keyboard'][] = [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']];
 
         $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
     }
@@ -659,7 +696,10 @@ class TelegramMenuHandler
                 [
                     ['text' => '🔢 100 Links', 'callback_data' => "bulk_qt:{$bundleId}:100"]
                 ],
-                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => 'menu:bulk'],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
@@ -675,7 +715,10 @@ class TelegramMenuHandler
                 [['text' => '📆 1 Day', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:1d"]],
                 [['text' => '📅 7 Days', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:7d"]],
                 [['text' => '♾ Never Expire', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}:never"]],
-                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => "bulk_bu:{$bundleId}"],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
@@ -691,7 +734,10 @@ class TelegramMenuHandler
                 [['text' => '5 Uses', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:5"]],
                 [['text' => '10 Uses', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:10"]],
                 [['text' => 'Unlimited', 'callback_data' => "bulk_li:{$bundleId}:{$quantity}:{$expiry}:unlim"]],
-                [['text' => '🏠 Cancel', 'callback_data' => 'menu:home']]
+                [
+                    ['text' => '⬅️ Back', 'callback_data' => "bulk_ex:{$bundleId}:{$quantity}"],
+                    ['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']
+                ]
             ]
         ];
 
@@ -764,5 +810,97 @@ class TelegramMenuHandler
             $this->telegramService->sendDocument($chatId, $fileContent, 'tokens.txt', $caption, $messageId);
             $this->telegramService->editMessageText($chatId, $messageId, "✅ <b>Bulk Access Tokens Generated</b>\n\nGenerated {$quantity} tokens. Please see the attached text file below.", $keyboard);
         }
+    }
+
+    private function showManageBundles(string $chatId, int $messageId): void
+    {
+        $bundles = \App\Models\AccountBundle::all();
+        $text = "📦 <b>Account Bundle Manager</b>\n\n"
+              . "Below is a list of registered account bundles. Select a bundle to manage status, delete, or add a new one.";
+
+        $keyboard = ['inline_keyboard' => []];
+
+        $keyboard['inline_keyboard'][] = [
+            ['text' => '➕ Add New Bundle', 'callback_data' => 'bundle_add']
+        ];
+
+        foreach ($bundles as $bundle) {
+            $statusDot = $bundle->is_active ? '🟢' : '🔴';
+            $keyboard['inline_keyboard'][] = [
+                ['text' => "{$statusDot} {$bundle->name} ({$bundle->platform})", 'callback_data' => "bundle_view:{$bundle->id}"]
+            ];
+        }
+
+        $keyboard['inline_keyboard'][] = [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showAddBundleGuide(string $chatId, int $messageId): void
+    {
+        $text = "➕ <b>Add New Account Bundle</b>\n\n"
+              . "To add a new bundle, please send a message to this chat in the following format:\n\n"
+              . "<code>/addbundle Name | Email | Platform | Password | [Username]</code>\n\n"
+              . "<b>Example:</b>\n"
+              . "<code>/addbundle MainSteam | steam_mail@gmail.com | Steam | secret_password | steam_user</code>";
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [['text' => '⬅️ Back to List', 'callback_data' => 'menu:manage_bundles']],
+                [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function showBundleDetails(string $chatId, int $messageId, int $bundleId): void
+    {
+        $bundle = \App\Models\AccountBundle::find($bundleId);
+        if (!$bundle) {
+            $this->showEmptyWarning($chatId, $messageId, "Account bundle not found.");
+            return;
+        }
+
+        $status = $bundle->is_active ? '🟢 Active' : '🔴 Inactive';
+        $text = "📦 <b>Account Bundle Details</b>\n\n"
+              . "• <b>Name</b>: <code>" . htmlspecialchars($bundle->name) . "</code>\n"
+              . "• <b>Platform</b>: <code>" . htmlspecialchars($bundle->platform) . "</code>\n"
+              . "• <b>Email</b>: <code>" . htmlspecialchars($bundle->email) . "</code>\n"
+              . "• <b>Username</b>: <code>" . htmlspecialchars($bundle->login_username ?? 'None') . "</code>\n"
+              . "• <b>Status</b>: <code>{$status}</code>";
+
+        $toggleLabel = $bundle->is_active ? '🔴 Deactivate' : '🟢 Activate';
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => $toggleLabel, 'callback_data' => "bundle_toggle:{$bundle->id}"],
+                    ['text' => '🗑 Delete', 'callback_data' => "bundle_delete:{$bundle->id}"]
+                ],
+                [['text' => '⬅️ Back to List', 'callback_data' => 'menu:manage_bundles']],
+                [['text' => '🏠 Main Menu', 'callback_data' => 'menu:home']]
+            ]
+        ];
+
+        $this->telegramService->editMessageText($chatId, $messageId, $text, $keyboard);
+    }
+
+    private function executeToggleBundle(string $chatId, int $messageId, int $bundleId): void
+    {
+        $bundle = \App\Models\AccountBundle::find($bundleId);
+        if ($bundle) {
+            $bundle->update(['is_active' => !$bundle->is_active]);
+        }
+        $this->showBundleDetails($chatId, $messageId, $bundleId);
+    }
+
+    private function executeDeleteBundle(string $chatId, int $messageId, int $bundleId): void
+    {
+        $bundle = \App\Models\AccountBundle::find($bundleId);
+        if ($bundle) {
+            $bundle->delete();
+        }
+        $this->showManageBundles($chatId, $messageId);
     }
 }

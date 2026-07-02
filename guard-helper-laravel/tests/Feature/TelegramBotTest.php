@@ -161,4 +161,93 @@ class TelegramBotTest extends TestCase
 
         $this->assertEquals(5, \App\Models\AccessGrant::where('account_bundle_id', $bundle->id)->count());
     }
+
+    public function test_bundle_crud_management_flows_are_handled(): void
+    {
+        $bundle = \App\Models\AccountBundle::create([
+            'name' => 'To Be Managed',
+            'email' => 'manage@test.com',
+            'platform' => 'Steam',
+            'password' => 'secret123',
+            'is_active' => true
+        ]);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_list',
+                'data' => 'menu:manage_bundles',
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 301
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'editMessageText')
+                && str_contains($request['text'] ?? '', 'Account Bundle Manager');
+        });
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_view',
+                'data' => "bundle_view:{$bundle->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 302
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'editMessageText')
+                && str_contains($request['text'] ?? '', 'Account Bundle Details')
+                && str_contains($request['text'] ?? '', 'To Be Managed');
+        });
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_toggle',
+                'data' => "bundle_toggle:{$bundle->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 303
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        $bundle->refresh();
+        $this->assertFalse($bundle->is_active);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'message' => [
+                'chat' => ['id' => 987654321],
+                'text' => '/addbundle NewCreated | created@test.com | Steam | pass123 | steam_user',
+                'message_id' => 304
+            ]
+        ]);
+        $response->assertStatus(200);
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'sendMessage')
+                && str_contains($request['text'] ?? '', 'Account Bundle Added Successfully!')
+                && str_contains($request['text'] ?? '', 'NewCreated')
+                && str_contains($request['text'] ?? '', 'created@test.com');
+        });
+        $newBundle = \App\Models\AccountBundle::where('name', 'NewCreated')->first();
+        $this->assertNotNull($newBundle);
+        $this->assertEquals('steam_user', $newBundle->login_username);
+
+        $response = $this->postJson('/api/webhook/telegram/message', [
+            'callback_query' => [
+                'id' => 'cb_delete',
+                'data' => "bundle_delete:{$bundle->id}",
+                'message' => [
+                    'chat' => ['id' => 987654321],
+                    'message_id' => 305
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        $this->assertNull(\App\Models\AccountBundle::find($bundle->id));
+    }
 }
